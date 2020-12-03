@@ -1,6 +1,6 @@
 import random, time, sys, os, pickle, math, inspect, textwrap, re
 
-CONSTS = {"speed": 0.0, "multiplier": 10}
+CONSTS = {"speed": 0.03, "multiplier": 10}
 
 punc = ".,?!:;\n"
 directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
