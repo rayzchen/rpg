@@ -1,5 +1,7 @@
 import random, time, sys, os, pickle, math, inspect, textwrap, re
 
+import testing; input = testing.get_input # Comment out if not testing
+
 CONSTS = {"speed": 0.0, "multiplier": 10}
 
 punc = ".,?!:;\n"
@@ -38,11 +40,14 @@ def input_slow(text, speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
     return input()
 
 def table(data, spaces):
-    print_slow(textwrap.fill(("\t" * spaces).join(data), width=os.get_terminal_size().columns, drop_whitespace=True))
+    if sys.stdout.isatty():
+        print_slow(textwrap.fill(("\t" * spaces).join(data), width=os.get_terminal_size().columns, drop_whitespace=True))
+    else:
+        print_slow(("\t" * spaces).join(data))
 
 class Game:
 
-    available_commands = ["help", "stats", "save", "cls", "gifts", "location", "shop", "items"]
+    available_commands = ["help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items"]
     help_commands = {
         "help": "Typing 'help' will display this help text. To get help with any commands, type 'help <command name>', replacing <command name> with the command you want help with.",
         "stats": "Typing 'stats' will display your current stats. Typing 'stats' and then one of 'name', 'health', 'experience', 'attack', 'defense', or 'money' will display that exact Stat.",
@@ -51,8 +56,8 @@ class Game:
         "clear": "Typing 'cls' or 'clear' clears the screen.",
         "gifts": "Typing 'gifts' will display page 1 of your Gifts, which you will receive from NPCs and other players. Typing 'gifts' and then a number will display that page. Typing 'gifts claim' and then a number will claim that gift number, which will be displayed next to the gift. Typing 'gift claim all' will claim all of your gifts.",
         "location": "Typing 'location' will tell you where you are. Typing 'location description' will tell you where you are, and also display the description of the current town you are in.",
-        "shop": "Typing 'shop' will bring you to the Shop. A prompt, 'Shop> ', will appear. In the shop, you can look at things which you want to buy. Type 'items' to look at all the items, and type 'items' and then a number to look at that page. Type 'info' and then a number to look at an item's stats, and type 'buy' and then a number will buy that item. Type 'exit' to exit the shop. The 'stats' command works in the shop as well. For help on the 'stats' command, type 'help stats'. There is no help command for the shop.",
-        "items": "Typing 'items' will display page 1 of your Items, which you will get from gifts or from Shops in Towns. Typing 'items'  and then a number will display that page. Typing 'items stats' and then a number will display the Stats for that item.",
+        "shop": "Typing 'shop' will bring you to the Shop. A prompt, 'Shop> ', will appear. In the shop, you can look at things which you want to buy. Type 'items' to look at all the items, and type 'items' and then a number to look at that page. Type 'info' and then a number to look at an item's stats, and type 'buy' and then a number will buy that item. Type 'exit' to exit the shop. The 'stats' command works in the shop as well. For help on the 'stats' command, type 'help stats'. There is no help command inside the shop.",
+        "items": "Typing 'items' will display page 1 of your Items, which you will get from gifts or from Shops in Towns. Typing 'items ' and then a number will display that page. Typing 'items stats ' and then a number will display the Stats for that item.",
     }
 
     def __init__(self):
@@ -140,6 +145,9 @@ class Game:
 
     def save(self, name=None):
         if not name: name = input_slow("Enter save name: ")
+        if name == "":
+            print_slow("Cancelled saving.")
+            return
         if os.path.isfile(os.path.join("save", "save_" + name + ".rpg")):
             if input_slow("Do you want to overwrite the save file for the save name " + name + "? (y/n) ").lower() != "y":
                 return
@@ -147,7 +155,6 @@ class Game:
         with open(os.path.join("save", "save_" + name + ".rpg"), "wb+") as f:
             pickle.dump(self, f)
             print_slow("Saved successfully!")
-            exit()
 
     def cls(self):
         os.system("cls || clear")
@@ -160,12 +167,14 @@ class Game:
             if claim_number == "all":
                 for gift in reversed(self.player.gifts):
                     gift.claim()
-            else:
+            elif claim_number is not None:
                 gift_num = int(claim_number) - 1
                 if gift_num >= len(self.player.gifts) or gift_num < 0:
                     print_slow("There is no Gift at number", claim_number + "!")
                     return
                 self.player.gifts[gift_num].claim()
+            else:
+                print_slow("Please provide the gift number to claim.")
         else:
             if not claim_or_page.isdecimal():
                 return -1
@@ -249,15 +258,14 @@ class Game:
                 cmd_args = command.split(" ")
             except KeyboardInterrupt:
                 print()
-                return
+                break
             except EOFError:
-                return
+                break
             if not len(cmd_args[0]) or not cmd_args[0]:
                 print()
                 continue
             if cmd_args[0] == "exit":
-                print()
-                return
+                break
             if cmd_args[0] in self.available_commands:
                 func = getattr(self, cmd_args[0])
                 if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
@@ -396,15 +404,14 @@ class Shop:
                 cmd_args = command.split(" ")
             except KeyboardInterrupt:
                 print()
-                return
+                break
             except EOFError:
-                return
+                break
             if not len(cmd_args[0]) or not cmd_args[0]:
                 print()
                 continue
             if cmd_args[0] == "exit":
-                print()
-                return
+                break
             if cmd_args[0] in self.available_commands:
                 func = getattr(self, cmd_args[0])
                 if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
@@ -513,7 +520,8 @@ class Road:
         self.town1, self.town2 = town1, town2
 
 def main():
-    os.system("cls || clear")
+    if sys.stdout.isatty():
+        os.system("cls || clear")
     if os.path.isdir("save") and len(os.listdir("save")):
         while not os.path.isfile(os.path.join("save", "save_" + (save_name := input_slow("Enter save name to be loaded: ")) + ".rpg")):
             if save_name != "":
