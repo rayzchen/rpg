@@ -1,67 +1,15 @@
-import random, time, sys, os, pickle, math, inspect, textwrap, re
-
-import testing; input = testing.get_input # Comment out if not testing
-
-CONSTS = {"speed": 0.0, "multiplier": 10}
-
-punc = ".,?!:;\n"
-directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"]
-currency = random.choice(["Alyf", "Ryn", "Iysa"])
-
-def print_slow(*args, sep=" ", end="\n", speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
-# def print_slow(*args, sep=" ", end="\n", speed=0, multiplier=10):
-    for i, item in enumerate(args):
-        for char in str(item):
-            print(end=char)
-            sys.stdout.flush()
-            if char not in punc:
-                time.sleep(speed)
-            else:
-                time.sleep(speed * multiplier)
-        if i < len(args) - 1:
-            for char in str(sep):
-                print(end=char)
-                sys.stdout.flush()
-                if char not in punc:
-                    time.sleep(speed)
-                else:
-                    time.sleep(speed * multiplier)
-    for char in str(end):
-        print(end=char)
-        sys.stdout.flush()
-        if char not in punc:
-            time.sleep(speed)
-        else:
-            time.sleep(speed * multiplier)
-
-def input_slow(text, speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
-# def input_slow(text, speed=0, multiplier=10):
-    print_slow(end=text)
-    return input()
-
-def table(data, spaces):
-    if sys.stdout.isatty():
-        print_slow(textwrap.fill(("\t" * spaces).join(data), width=os.get_terminal_size().columns, drop_whitespace=True))
-    else:
-        print_slow(("\t" * spaces).join(data))
+import random, time, sys, os, pickle, math, inspect, re
+from utils import *
 
 class Game:
 
     available_commands = ["help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items"]
-    help_commands = {
-        "help": "Typing 'help' will display this help text. To get help with any commands, type 'help <command name>', replacing <command name> with the command you want help with.",
-        "stats": "Typing 'stats' will display your current stats. Typing 'stats' and then one of 'name', 'health', 'experience', 'attack', 'defense', or 'money' will display that exact Stat.",
-        "save": "Typing 'save' will save your current state to a folder named 'save'. The save name will be called 'save_<name>.rpg'. Typing 'save <name>' will save with name <name>.",
-        "cls": "Typing 'cls' or 'clear' clears the screen.",
-        "clear": "Typing 'cls' or 'clear' clears the screen.",
-        "gifts": "Typing 'gifts' will display page 1 of your Gifts, which you will receive from NPCs and other players. Typing 'gifts' and then a number will display that page. Typing 'gifts claim' and then a number will claim that gift number, which will be displayed next to the gift. Typing 'gift claim all' will claim all of your gifts.",
-        "location": "Typing 'location' will tell you where you are. Typing 'location description' will tell you where you are, and also display the description of the current town you are in.",
-        "shop": "Typing 'shop' will bring you to the Shop. A prompt, 'Shop> ', will appear. In the shop, you can look at things which you want to buy. Type 'items' to look at all the items, and type 'items' and then a number to look at that page. Type 'info' and then a number to look at an item's stats, and type 'buy' and then a number will buy that item. Type 'exit' to exit the shop. The 'stats' command works in the shop as well. For help on the 'stats' command, type 'help stats'. There is no help command inside the shop.",
-        "items": "Typing 'items' will display page 1 of your Items, which you will get from gifts or from Shops in Towns. Typing 'items ' and then a number will display that page. Typing 'items stats ' and then a number will display the Stats for that item.",
-    }
 
     def __init__(self):
         self.started = False
+        with open(os.path.join("data", "help.txt"), "r") as f:
+            lines = f.read().rstrip().splitlines()
+        self.help_commands = {cmd: line for cmd, line in zip(self.available_commands, lines)}
 
     def setup_player(self):
         while not (name := input_slow("Please enter your name: ")): print_slow("That is not a valid username!")
@@ -74,7 +22,7 @@ class Game:
         print()
 
     def load_town_data(self):
-        with open("desc.txt", "r") as f:
+        with open(os.path.join("data", "towns.txt"), "r") as f:
             text = f.read().rstrip()
         town_info = text.split("\n\n")
         towns = list(map(lambda x: x.split("\n"), town_info))
@@ -100,23 +48,28 @@ class Game:
         self.player.floor = self.floors[0]
         self.player.town = self.floors[0].towns[-1]
 
-        print_slow("Hello, " + self.player.name + "! Welcome to my RPG Game, where you will embark on an exciting journey through a series of challenges to defeat the final boss and claim victory. I assure you, it will be a hard path to take, but feel free to get used to everything! Right now you are standing in the Starting Town, where you can buy things, take refuge in and start your journey. Once you have done everything you want to do in Starting Town, then you can make your way to the next town, " + road.town2.name + ". See there, in the " + directions[direction] + "? That's the road you want to take.")
-
     def introduction(self):
+        with open(os.path.join("data", "intro.txt"), "r") as f:
+            lines = f.read().rstrip().splitlines()
+        assert len(lines) == 3
+
+        direction, road = list(self.player.town.linked_to.items())[0]
+        print_slow(lines[0] % (self.player.name, road.town2.name, directions[direction]))
         input_slow("\nPress Enter to continue\n")
-
         self.player.print_stats()
-        print_slow("\nTake a look at your Player Stats. You can level up your experience by fighting against monsters. The more experience you have, the stronger you are, but armour can drastically change that. Currency is measured in " + currency + "s. You don't have much money, do you? Here, I'll give you some to start you off. Take it, it's just a Gift!")
-
+        print()
+        print_slow(lines[1] % currency)
         Money("Tour Guide", 200).give(self.player)
-
-        print_slow("Now, before I leave, I'll show you how to get around. You will get a dialogue that is shown as Menu> , where you can type what you want to do. Type 'stats' to show your Player Stats, and if you want to show only one of your Stats, type one of 'health', 'experience', 'attack', 'defense', or 'money' after 'stats' to show that exact Stat. Monsters will only spawn on roads while you go to other towns, unless the town you are at is not a safe zone. If so, when you get to the town, you will get a warning. Day and night are measured in realtime, and one day is 20 minutes. At night, there will be more monsters, each of which will be stronger, so make sure you get to an inn and sleep. Beware, this will cost 20 " + currency + "s, so make sure you have the money. Otherwise, come back in a few minutes and you'll be fine! Also, the Gift that I gave you can be claimed by typing 'gifts claim 1'. If you want any more help, type 'help'. Good luck!")
-
+        print_slow(lines[2] % currency)
         input_slow("\nPress Enter to continue\n")
 
     def help(self, item=None):
         if item is None:
-            print_slow("This is the Menu bar, and will be indicated when you see the characters 'Menu> ' on the screen. You can type commands here. To get help with any commands, type 'help <command name>', replacing <command name> with the command you want help with.\n")
+            print_slow(
+                "This is the Menu bar, and will be indicated when you see the characters 'Menu> ' on the" + \
+                "screen. You can type commands here. To get help with any commands, type 'help" + \
+                " <command name>', replacing <command name> with the command you want help with.")
+            print()
             print_slow("Here are the available commands:")
             table(self.available_commands, 2)
         elif item in self.available_commands:
@@ -388,12 +341,14 @@ class Inn:
 class Shop:
 
     available_commands = ["items", "info", "buy"]
-    stat_keys = {"attack": "Attack Damage", "defense": "Defense Points", "desc": "Description", "effect": "Effect"}
+    stat_keys = {
+        "attack": "Attack Damage", "defense": "Defense Points", "desc": "Description", "effect": "Effect",
+    }
 
     def __init__(self):
         self.selling = [
-            [Item("Wooden Sword", {"attack": 6, "defense": 3, "desc": "A sword worthy for even beginners."}), False, 75],
-            [Item("Wooden Shield", {"attack": 0, "defense": 4, "desc": "The ideal shield to deflect beasts and monsters."}), False, 70],
+            [Item("Wooden Sword", {"attack": 6, "defense": 2, "desc": "A sword worthy for even beginners."}), 75, False],
+            [Item("Wooden Shield", {"attack": 0, "defense": 4, "desc": "The ideal shield to deflect beasts and monsters."}), 70, False],
         ]
 
     def mainloop(self, player):
@@ -448,7 +403,7 @@ class Shop:
             return
         print_slow("Items in the shop:\n")
         i = page_num * 5
-        for item, sold, price in self.selling[i:]:
+        for item, price, sold in self.selling[i:]:
             if sold:
                 print_slow("Item", str(i + 1) + ":", item.name, "(SOLD)")
             else:
@@ -477,17 +432,17 @@ class Shop:
             print_slow("There is no item at number", item_index + "!")
             return
         item = self.selling[item_num]
-        if item[1]:
+        if item[2]:
             print_slow("Item", item_index, "(" + item[0].name + ") has already been sold!")
-        elif item[2] > self.player.money:
-            print_slow("You do not have enough money to buy this item (" + item[0].name + ")!")
+        elif item[1] > self.player.money:
+            print_slow("You do not have enough money to buy a " + item[0].name + "!")
         else:
-            answer = input_slow("Are you sure you want to buy this item for " + str(item[2]) + " " + currency + "s? (y/n) ").lower()
+            answer = input_slow("Are you sure you want to buy a " + item[0].name + " for " + str(item[1]) + " " + currency + "s? (y/n) ").lower()
             if answer == "y":
-                self.player.money -= item[2]
+                self.player.money -= item[1]
                 self.player.items.append(item[0])
-                item[1] = True
-                print_slow("You have bought item", item_index, "(" + item[0].name + ") for", item[2], currency + "s.")
+                item[2] = True
+                print_slow("You have bought item", item_index, "(" + item[0].name + ") for", item[1], currency + "s.")
 
     def cls(self):
         os.system("cls || clear")

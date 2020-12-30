@@ -1,0 +1,11 @@
+name: Wooden Sword
+desc: A sword worthy for even beginners.
+price: 75
+attack: 6
+defense: 2
+
+name: Wooden Shield
+desc: The ideal shield to deflect beasts and monsters.
+price: 70
+attack: 0
+defense: 4

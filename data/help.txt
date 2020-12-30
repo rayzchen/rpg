@@ -1,0 +1,10 @@
+This is the Menu bar, and will be indicated when you see the characters 'Menu> ' on the screen. You can type commands here. To get help with any commands, type 'help <command name>', replacing <command name> with the command you want help with.\n")
+Typing 'help' will display this help text. To get help with any commands, type 'help <command name>', replacing <command name> with the command you want help with.
+Typing 'stats' will display your current stats. Typing 'stats' and then one of 'name', 'health', 'experience', 'attack', 'defense', or 'money' will display that exact Stat.
+Typing 'save' will save your current state to a folder named 'save'. The save name will be called 'save_<name>.rpg'. Typing 'save <name>' will save with name <name>.
+Typing 'cls' or 'clear' clears the screen.
+Typing 'cls' or 'clear' clears the screen.
+Typing 'gifts' will display page 1 of your Gifts, which you will receive from NPCs and other players. Typing 'gifts' and then a number will display that page. Typing 'gifts claim' and then a number will claim that gift number, which will be displayed next to the gift. Typing 'gift claim all' will claim all of your gifts.
+Typing 'location' will tell you where you are. Typing 'location description' will tell you where you are, and also display the description of the current town you are in.
+Typing 'shop' will bring you to the Shop. A prompt, 'Shop> ', will appear. In the shop, you can look at things which you want to buy. Type 'items' to look at all the items, and type 'items' and then a number to look at that page. Type 'info' and then a number to look at an item's stats, and type 'buy' and then a number will buy that item. Type 'exit' to exit the shop. The 'stats' command works in the shop as well. For help on the 'stats' command, type 'help stats'. There is no help command inside the shop.
+Typing 'items' will display page 1 of your Items, which you will get from gifts or from Shops in Towns. Typing 'items ' and then a number will display that page. Typing 'items stats ' and then a number will display the Stats for that item.
