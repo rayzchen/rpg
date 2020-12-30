@@ -1,4 +1,11 @@
-import random, time, sys, os, pickle, math, inspect, re
+import random
+import time
+import sys
+import os
+import pickle
+import math
+import inspect
+import re
 from utils import *
 
 class Game:
@@ -10,7 +17,8 @@ class Game:
         self.started = False
 
     def setup_player(self):
-        while not (name := input_slow("Please enter your name: ")): print_slow("That is not a valid username!")
+        while not (name := input_slow("Please enter your name: ")):
+            print_slow("That is not a valid username!")
         self.player = Player(
             name, 50, 50, Experience(), 5, 2, 0
         )
@@ -22,7 +30,8 @@ class Game:
     def load_town_data(self):
         towns = CONSTS["towns"]
         self.starting_town = towns.pop(0)
-        self.starting_town = {"name": self.starting_town[0], "desc": self.starting_town[1:]}
+        self.starting_town = {
+            "name": self.starting_town[0], "desc": self.starting_town[1:]}
         random.shuffle(towns)
         self.town_names = list(map(lambda x: x[0], towns))
         self.town_descs = list(map(lambda x: x[1:], towns))
@@ -49,7 +58,8 @@ class Game:
         assert len(lines) == 3
 
         direction, road = list(self.player.town.linked_to.items())[0]
-        print_slow(lines[0] % (self.player.name, road.town2.name, directions[direction]))
+        print_slow(lines[0] % (self.player.name,
+                               road.town2.name, directions[direction]))
         input_slow("\nPress Enter to continue\n")
         self.player.print_stats()
         print()
@@ -61,8 +71,8 @@ class Game:
     def help(self, item=None):
         if item is None:
             print_slow(
-                "This is the Menu bar, and will be indicated when you see the characters 'Menu> ' on the" + \
-                "screen. You can type commands here. To get help with any commands, type 'help" + \
+                "This is the Menu bar, and will be indicated when you see the characters 'Menu> ' on the" +
+                "screen. You can type commands here. To get help with any commands, type 'help" +
                 " <command name>', replacing <command name> with the command you want help with.")
             print()
             print_slow("Here are the available commands:")
@@ -79,7 +89,8 @@ class Game:
         elif item == "name":
             print_slow("Name:", self.player.name)
         elif item == "health":
-            print_slow("Health:", format(self.player.health, ",") + "/" + format(self.player.max_health, ","))
+            print_slow("Health:", format(self.player.health, ",") +
+                       "/" + format(self.player.max_health, ","))
         elif item == "experience":
             print_slow("Experience:", self.player.experience)
         elif item == "attack":
@@ -87,19 +98,23 @@ class Game:
         elif item == "defense":
             print_slow("Defense points:", format(self.player.defense, ","))
         elif item == "money":
-            print_slow("Money:", format(self.player.money, ",") + " " + currency + "s")
+            print_slow("Money:", format(
+                self.player.money, ",") + " " + currency + "s")
         else:
-            print_slow("There is no Stat that has the name of \"" + item + "\"!")
+            print_slow(
+                "There is no Stat that has the name of \"" + item + "\"!")
 
     def save(self, name=None):
-        if not name: name = input_slow("Enter save name: ")
+        if not name:
+            name = input_slow("Enter save name: ")
         if name == "":
             print_slow("Cancelled saving.")
             return
         if os.path.isfile(os.path.join("save", "save_" + name + ".rpg")):
             if input_slow("Do you want to overwrite the save file for the save name " + name + "? (y/n) ").lower() != "y":
                 return
-        if not os.path.isdir("save"): os.mkdir("save")
+        if not os.path.isdir("save"):
+            os.mkdir("save")
         with open(os.path.join("save", "save_" + name + ".rpg"), "wb+") as f:
             pickle.dump(self, f)
             print_slow("Saved successfully!")
@@ -120,7 +135,8 @@ class Game:
                     return -1
                 gift_num = int(claim_number) - 1
                 if gift_num >= len(self.player.gifts) or gift_num < 0:
-                    print_slow("There is no Gift at number", claim_number + "!")
+                    print_slow("There is no Gift at number",
+                               claim_number + "!")
                     return
                 self.player.gifts[gift_num].claim()
             else:
@@ -129,7 +145,8 @@ class Game:
             if not claim_or_page.isdecimal():
                 return -1
             if len(self.player.gifts) == 0:
-                print_slow("Gifts\n\nYou have no Gifts. You can obtain Gifts from NPCs and other players.")
+                print_slow(
+                    "Gifts\n\nYou have no Gifts. You can obtain Gifts from NPCs and other players.")
                 return
             page = int(claim_or_page) - 1
             if page * 10 >= len(self.player.gifts):
@@ -138,10 +155,13 @@ class Game:
             print_slow("Gifts\n")
             i = page * 10
             for gift in self.player.gifts[i:]:
-                print_slow("Gift", str(i + 1) + ":", gift.item_name, "received from", gift.from_who)
+                print_slow("Gift", str(i + 1) + ":", gift.item_name,
+                           "received from", gift.from_who)
                 i += 1
-                if i > (page + 1) * 10: break
-            print_slow("\nPage", claim_or_page, "of", math.ceil(len(self.player.gifts) / 10))
+                if i > (page + 1) * 10:
+                    break
+            print_slow("\nPage", claim_or_page, "of",
+                       math.ceil(len(self.player.gifts) / 10))
 
     def location(self, desc=None):
         if self.player.town is not None:
@@ -149,7 +169,8 @@ class Game:
                 print()
                 print_slow(*self.player.town.desc)
             else:
-                print_slow("You are on Floor", self.player.floor.num, "and are at", self.player.town.name + ".")
+                print_slow("You are on Floor", self.player.floor.num,
+                           "and are at", self.player.town.name + ".")
         else:
             print_slow("You are OTM - off the map!")
 
@@ -174,7 +195,8 @@ class Game:
             if not stats_or_page.isdecimal():
                 return -1
             if len(self.player.items) == 0:
-                print_slow("You have no items. You can obtain items from gifts or from Shops in towns.")
+                print_slow(
+                    "You have no items. You can obtain items from gifts or from Shops in towns.")
                 return
             page_num = int(stats_or_page) - 1
             if page_num * 5 > len(self.player.items):
@@ -185,9 +207,11 @@ class Game:
             for item in self.player.items[i:]:
                 print_slow("Item", str(i + 1) + ":", item.name)
                 i += 1
-                if i >= (page_num + 1) * 5: break
-            print_slow("\nPage", stats_or_page, "of", math.ceil(len(self.player.items) / 10))
-    
+                if i >= (page_num + 1) * 5:
+                    break
+            print_slow("\nPage", stats_or_page, "of",
+                       math.ceil(len(self.player.items) / 10))
+
     def sleep(self):
         if self.player.town is not None:
             if input_slow("Are you sure you want to sleep? This costs 5 " + currency + "s. (y/n) ") == "y":
@@ -204,7 +228,8 @@ class Game:
             self.started = True
         while True:
             try:
-                command = re.subn(" +", input_slow("Menu> ").rstrip().lower(), " ")[0]
+                command = re.subn(
+                    " +", input_slow("Menu> ").rstrip().lower(), " ")[0]
                 cmd_args = command.split(" ")
             except KeyboardInterrupt:
                 print()
@@ -310,7 +335,8 @@ class Gift:
 
     def claim(self):
         if self.player is not None:
-            self.player.items.extend([self.item(*self.args) for i in range(self.amount)])
+            self.player.items.extend([self.item(*self.args)
+                                      for i in range(self.amount)])
             self.player.gifts.remove(self)
             print_slow("Claimed", self.item_name, "from", self.from_who)
         else:
@@ -323,7 +349,8 @@ class Item:
 
 class Money(Gift):
     def __init__(self, from_who, amount):
-        super(Money, self).__init__(from_who, format(amount, ",") + " " + currency + "s", None, amount)
+        super(Money, self).__init__(from_who, format(
+            amount, ",") + " " + currency + "s", None, amount)
 
     def claim(self):
         if self.player is not None:
@@ -363,7 +390,8 @@ class Shop:
         self.player = player
         while True:
             try:
-                command = re.subn(" +", input_slow("Shop> ").rstrip().lower(), " ")[0]
+                command = re.subn(
+                    " +", input_slow("Shop> ").rstrip().lower(), " ")[0]
                 cmd_args = command.split(" ")
             except KeyboardInterrupt:
                 print()
@@ -390,7 +418,8 @@ class Shop:
         elif item == "name":
             print_slow("Name:", self.player.name)
         elif item == "health":
-            print_slow("Health:", str(self.player.health) + "/" + str(self.player.max_health))
+            print_slow("Health:", str(self.player.health) +
+                       "/" + str(self.player.max_health))
         elif item == "experience":
             print_slow("Experience:", self.player.experience)
         elif item == "attack":
@@ -398,9 +427,11 @@ class Shop:
         elif item == "defense":
             print_slow("Defense points:", self.player.defense)
         elif item == "money":
-            print_slow("Money:", format(self.player.money, ",") + " " + currency + "s")
+            print_slow("Money:", format(
+                self.player.money, ",") + " " + currency + "s")
         else:
-            print_slow("There is no Stat that has the name of \"" + item + "\"!")
+            print_slow(
+                "There is no Stat that has the name of \"" + item + "\"!")
 
     def items(self, page="1"):
         if not page.isdecimal():
@@ -415,9 +446,11 @@ class Shop:
             if sold:
                 print_slow("Item", str(i + 1) + ":", item.name, "(SOLD)")
             else:
-                print_slow("Item", str(i + 1) + ":", item.name, "\tPrice:", price, currency + "s")
+                print_slow("Item", str(i + 1) + ":", item.name,
+                           "\tPrice:", price, currency + "s")
             i += 1
-            if i >= (page_num + 1) * 5: break
+            if i >= (page_num + 1) * 5:
+                break
         print_slow("\nPage", page, "of", math.ceil(len(self.selling) / 10))
 
     def info(self, item_index=None):
@@ -442,16 +475,20 @@ class Shop:
             return
         item = self.selling[item_num]
         if item[2]:
-            print_slow("Item", item_index, "(" + item[0].name + ") has already been sold!")
+            print_slow("Item", item_index,
+                       "(" + item[0].name + ") has already been sold!")
         elif item[1] > self.player.money:
-            print_slow("You do not have enough money to buy a " + item[0].name + "!")
+            print_slow("You do not have enough money to buy a " +
+                       item[0].name + "!")
         else:
-            answer = input_slow("Are you sure you want to buy a " + item[0].name + " for " + str(item[1]) + " " + currency + "s? (y/n) ").lower()
+            answer = input_slow("Are you sure you want to buy a " + item[0].name + " for " + str(
+                item[1]) + " " + currency + "s? (y/n) ").lower()
             if answer == "y":
                 self.player.money -= item[1]
                 self.player.items.append(item[0])
                 item[2] = True
-                print_slow("You have bought item", item_index, "(" + item[0].name + ") for", item[1], currency + "s.")
+                print_slow("You have bought item", item_index,
+                           "(" + item[0].name + ") for", item[1], currency + "s.")
 
     def cls(self):
         os.system("cls || clear")
@@ -464,7 +501,8 @@ class Floor:
         self.num = num
         self.prev_floor = prev_floor
         self.next_floor = next_floor
-        self.towns = [Town(name, desc) for i, (name, desc) in enumerate(zip(town_names, town_descs))]
+        self.towns = [Town(name, desc) for i, (name, desc)
+                      in enumerate(zip(town_names, town_descs))]
 
 class Town:
     def __init__(self, name, desc, connect=None, side=None):
