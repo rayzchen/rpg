@@ -1,2 +1,5 @@
 **/*.pyc
 save/
+dist/
+.vscode/
+**/__pycache__/
