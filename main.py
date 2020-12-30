@@ -3,13 +3,11 @@ from utils import *
 
 class Game:
 
-    available_commands = ["help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items"]
+    available_commands = CONSTS["available_commands"]
+    help_commands = CONSTS["help_commands"]
 
     def __init__(self):
         self.started = False
-        with open(os.path.join("data", "help.txt"), "r") as f:
-            lines = f.read().rstrip().splitlines()
-        self.help_commands = {cmd: line for cmd, line in zip(self.available_commands, lines)}
 
     def setup_player(self):
         while not (name := input_slow("Please enter your name: ")): print_slow("That is not a valid username!")
@@ -22,10 +20,7 @@ class Game:
         print()
 
     def load_town_data(self):
-        with open(os.path.join("data", "towns.txt"), "r") as f:
-            text = f.read().rstrip()
-        town_info = text.split("\n\n")
-        towns = list(map(lambda x: x.split("\n"), town_info))
+        towns = CONSTS["towns"]
         self.starting_town = towns.pop(0)
         self.starting_town = {"name": self.starting_town[0], "desc": self.starting_town[1:]}
         random.shuffle(towns)
@@ -38,15 +33,15 @@ class Game:
 
         starting_floor = self.floors[0]
         name, desc = self.starting_town["name"], self.starting_town["desc"]
-        starting_town = Town(name, desc)
+        self.starting_town = Town(name, desc)
 
-        road = Road(starting_town, random.choice(starting_floor.towns))
+        road = Road(self.starting_town, random.choice(starting_floor.towns))
         direction = random.randint(0, 7)
-        starting_town.linked_to = {direction: road}
-        starting_floor.towns.append(starting_town)
+        self.starting_town.linked_to = {direction: road}
+        starting_floor.towns.append(self.starting_town)
 
-        self.player.floor = self.floors[0]
-        self.player.town = self.floors[0].towns[-1]
+        self.player.floor = starting_floor
+        self.player.town = self.starting_town
 
     def introduction(self):
         with open(os.path.join("data", "intro.txt"), "r") as f:
@@ -84,13 +79,13 @@ class Game:
         elif item == "name":
             print_slow("Name:", self.player.name)
         elif item == "health":
-            print_slow("Health:", str(self.player.health) + "/" + str(self.player.max_health))
+            print_slow("Health:", format(self.player.health, ",") + "/" + format(self.player.max_health, ","))
         elif item == "experience":
             print_slow("Experience:", self.player.experience)
         elif item == "attack":
-            print_slow("Attack damage:", self.player.attack)
+            print_slow("Attack damage:", format(self.player.attack, ","))
         elif item == "defense":
-            print_slow("Defense points:", self.player.defense)
+            print_slow("Defense points:", format(self.player.defense, ","))
         elif item == "money":
             print_slow("Money:", format(self.player.money, ",") + " " + currency + "s")
         else:
@@ -121,6 +116,8 @@ class Game:
                 for gift in reversed(self.player.gifts):
                     gift.claim()
             elif claim_number is not None:
+                if not claim_number.isdecimal():
+                    return -1
                 gift_num = int(claim_number) - 1
                 if gift_num >= len(self.player.gifts) or gift_num < 0:
                     print_slow("There is no Gift at number", claim_number + "!")
@@ -161,10 +158,10 @@ class Game:
         print_slow("You have", self.player.money, currency + "s.\n")
         self.player.town.shop.mainloop(self.player)
 
-    def items(self, stats_or_page="1", num="1"):
-        if not num.isdecimal():
-            return -1
+    def items(self, stats_or_page="1", num=""):
         if stats_or_page == "stats":
+            if not num.isdecimal():
+                return -1
             num_int = int(num) - 1
             if num_int >= len(self.player.items) or num_int < 0:
                 print_slow("There is no item at number", num + "!")
@@ -237,8 +234,9 @@ class Experience:
         self.exp += amount
         self.total_exp += amount
         if self.exp > self.level * 5 + 20:
-            self.exp -= self.level * 5 + 20
-            self.level += 1
+            while self.exp > self.level * 5 + 20:
+                self.exp -= self.level * 5 + 20
+                self.level += 1
             return True
         return False
 
@@ -250,9 +248,10 @@ class Experience:
             self.exp += self.level * 5 + 20
 
     def __repr__(self):
-        return str(self.total_exp) + " (Level " + str(self.level) + " + " + str(self.exp) + ")"
+        return format(self.total_exp, ",") + " (Level " + format(self.level, ",") + \
+            " + " + format(self.exp, ",") + ")"
 
-class Alive:
+class LifeForm:
     def __init__(self, name, health, max_health, attack, defense):
         self.name = name
         self.health = health
@@ -268,7 +267,7 @@ class Alive:
         print_slow("Attack damage:", self.attack)
         print_slow("Defense points:", self.defense)
 
-class Player(Alive):
+class Player(LifeForm):
     def __init__(self, name, health, max_health, experience, attack, defense, money):
         super(Player, self).__init__(name, health, max_health, attack, defense)
         self.experience = experience
@@ -346,10 +345,19 @@ class Shop:
     }
 
     def __init__(self):
-        self.selling = [
-            [Item("Wooden Sword", {"attack": 6, "defense": 2, "desc": "A sword worthy for even beginners."}), 75, False],
-            [Item("Wooden Shield", {"attack": 0, "defense": 4, "desc": "The ideal shield to deflect beasts and monsters."}), 70, False],
-        ]
+        items = [0, 1]
+        self.selling = []
+        for item in items:
+            name = CONSTS["items"][item]["name"]
+            price = CONSTS["items"][item]["price"]
+            stats = CONSTS["items"][item].copy()
+            stats.pop("name")
+            stats.pop("price")
+            self.selling.append([Item(name, stats), price, False])
+        # self.selling = [
+        #     [Item("Wooden Sword", {"attack": 6, "defense": 2, "desc": "A sword worthy for even beginners."}), 75, False],
+        #     [Item("Wooden Shield", {"attack": 0, "defense": 4, "desc": "The ideal shield to deflect beasts and monsters."}), 70, False],
+        # ]
 
     def mainloop(self, player):
         self.player = player
@@ -423,6 +431,7 @@ class Shop:
         print_slow("Info on item", item_index, "(" + item.name + "):\n")
         for stat_name, stat_value in item.stats.items():
             print_slow(self.stat_keys[stat_name] + ":", stat_value)
+        print_slow("Price:", self.selling[item_num][1])
 
     def buy(self, item_index=None):
         if item_index is None or not item_index.isdecimal():
