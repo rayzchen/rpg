@@ -1,12 +1,13 @@
 import random, time, sys, os, math, textwrap
 
-# import testing; input = testing.get_input # Comment out if not testing
+import testing; input = testing.get_input # Comment out if not testing
 
 __all__ = ["CONSTS", "currency", "directions", "print_slow", "input_slow", "table"]
 
 CONSTS = {
     "speed": 0.0, "multiplier": 10,
-    "available_commands": ["help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items"],
+    "available_commands": [
+        "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items", "equipment"],
 }
 
 with open(os.path.join("data", "help.txt"), "r") as f:

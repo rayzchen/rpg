@@ -175,7 +175,7 @@ class Game:
             print_slow("You are OTM - off the map!")
 
     def shop(self):
-        print_slow()
+        print()
         print_slow("You have", self.player.money, currency + "s.\n")
         self.player.town.shop.mainloop(self.player)
 
@@ -190,6 +190,8 @@ class Game:
             item = self.player.items[num_int]
             print_slow("Stats on item", num, "(" + item.name + "):\n")
             for stat_name, stat_value in item.stats.items():
+                if stat_name == "type":
+                    continue
                 print_slow(Shop.stat_keys[stat_name] + ":", stat_value)
         else:
             if not stats_or_page.isdecimal():
@@ -211,6 +213,40 @@ class Game:
                     break
             print_slow("\nPage", stats_or_page, "of",
                        math.ceil(len(self.player.items) / 10))
+    
+    def equipment(self, equip=None, item_num=None):
+        if equip is None:
+            print_slow("Equipped items:\n")
+            print_slow("Sword:", self.player.equipment.sword)
+            print_slow("Shield:", self.player.equipment.shield)
+            print_slow("Cloak:", self.player.equipment.cloak)
+            print_slow("Helmet:", self.player.equipment.helmet)
+            print_slow("Shoes:", self.player.equipment.shoes)
+        elif equip == "equip":
+            if item_num is None or not item_num.isdecimal():
+                return -1
+            item_int = int(item_num) - 1
+            if item_int >= len(self.player.items):
+                print_slow("There is no item at number", item_num + "!")
+                return
+            item = self.player.items[item_int]
+            _type = item.stats["type"]
+            if _type not in self.player.equipment.equippable:
+                print_slow("Cannot equip", item, "because it is a" + 
+                           ("n" if _type[0].lower() in "aeiou" else ""), t_type)
+                
+            equipped = getattr(self.player.equipment, _type)
+            if equipped is not None:
+                if equipped is item:
+                    print_slow("You already have", equipped, "equipped!")
+                    return
+                if input_slow("You have a" + ("n" if str(equipped)[0].lower() in "aeiou" else "") + " " +
+                        str(equipped) + " equipped currently. Do you want to replace it? (y/n) ") != "y":
+                    return
+            setattr(self.player.equipment, _type, item)
+            print_slow("Equipped", str(item) + ".")
+        else:
+            return -1
 
     def sleep(self):
         if self.player.town is not None:
@@ -275,6 +311,7 @@ class Experience:
     def __repr__(self):
         return format(self.total_exp, ",") + " (Level " + format(self.level, ",") + \
             " + " + format(self.exp, ",") + ")"
+    __str__ = __repr__
 
 class LifeForm:
     def __init__(self, name, health, max_health, attack, defense):
@@ -313,11 +350,13 @@ class Player(LifeForm):
         print_slow("Money:", format(self.money, ","), currency + "s")
 
 class Equipment:
+    equippable = ["sword", "shield", "cloak", "helmet", "shoes"]
     def __init__(self):
         self.sword = None
         self.shield = None
         self.cloak = None
         self.helmet = None
+        self.shoes = None
 
 class Gift:
     def __init__(self, from_who, item_name, item, amount, args=[]):
@@ -345,7 +384,12 @@ class Gift:
 class Item:
     def __init__(self, name, stats={}):
         self.name = name
+        self.level = 0
         self.stats = stats
+    
+    def __repr__(self):
+        return self.name + " +" + str(self.level)
+    __str__ = __repr__
 
 class Money(Gift):
     def __init__(self, from_who, amount):
@@ -381,10 +425,6 @@ class Shop:
             stats.pop("name")
             stats.pop("price")
             self.selling.append([Item(name, stats), price, False])
-        # self.selling = [
-        #     [Item("Wooden Sword", {"attack": 6, "defense": 2, "desc": "A sword worthy for even beginners."}), 75, False],
-        #     [Item("Wooden Shield", {"attack": 0, "defense": 4, "desc": "The ideal shield to deflect beasts and monsters."}), 70, False],
-        # ]
 
     def mainloop(self, player):
         self.player = player
@@ -463,6 +503,8 @@ class Shop:
         item = self.selling[item_num][0]
         print_slow("Info on item", item_index, "(" + item.name + "):\n")
         for stat_name, stat_value in item.stats.items():
+            if stat_name == "type":
+                continue
             print_slow(self.stat_keys[stat_name] + ":", stat_value)
         print_slow("Price:", self.selling[item_num][1])
 
@@ -478,11 +520,12 @@ class Shop:
             print_slow("Item", item_index,
                        "(" + item[0].name + ") has already been sold!")
         elif item[1] > self.player.money:
-            print_slow("You do not have enough money to buy a " +
-                       item[0].name + "!")
+            print_slow("You have insufficient funds to buy a" + 
+                       ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name + "!")
         else:
-            answer = input_slow("Are you sure you want to buy a " + item[0].name + " for " + str(
-                item[1]) + " " + currency + "s? (y/n) ").lower()
+            answer = input_slow("Are you sure you want to buy a" + 
+                                ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name + 
+                                " for " + str(item[1]) + " " + currency + "s? (y/n) ").lower()
             if answer == "y":
                 self.player.money -= item[1]
                 self.player.items.append(item[0])
@@ -525,20 +568,18 @@ def main():
     if sys.stdout.isatty():
         os.system("cls || clear")
     if os.path.isdir("save") and len(os.listdir("save")):
-        while not os.path.isfile(os.path.join("save", "save_" + (save_name := input_slow("Enter save name to be loaded: ")) + ".rpg")):
+        while True:
+            save_name = input_slow("Enter save name to be loaded: ")
             if save_name != "":
+                if os.path.isfile(os.path.join("save", "save_" + save_name)):
+                    with open(os.path.join("save", "save_" + save_name + ".rpg"), "rb") as f:
+                        save = pickle.load(f)
+                    save.mainloop()
+                    return
                 print_slow("There is no save file named " + save_name + "!")
-            else:
-                print_slow("Creating new world...\n")
-                game = Game()
-                game.mainloop()
-                return
-        with open(os.path.join("save", "save_" + save_name + ".rpg"), "rb") as f:
-            save = pickle.load(f)
-            save.mainloop()
-    else:
-        game = Game()
-        game.mainloop()
+    print_slow("Creating new world...\n")
+    game = Game()
+    game.mainloop()
 
 if __name__ == "__main__":
     main()
