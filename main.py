@@ -256,9 +256,15 @@ class Game:
             setattr(self.player.equipment, _type, item)
             print_slow("Equipped", str(item) + ".")
         elif equip == "unequip":
-            if item_num is None or item_num not in Equipment.equippable:
+            if item_num is None:
                 return -1
+            if item_num not in Equipment.equippable:
+                print_slow("You cannot unequip", item_num + "!")
             item = getattr(self.player.equipment, item_num)
+            if item is None:
+                print_slow("You do not have a" + ("n" if item_num in "aeiou" else ""),
+                    "equipped!")
+                return
             setattr(self.player.equipment, item_num, None)
             print_slow("Unequipped", str(item) + ".")
         else:
@@ -592,6 +598,8 @@ def main():
                     save.mainloop()
                     return
                 print_slow("There is no save file named " + save_name + "!")
+            else:
+                break
     print_slow("Creating new world...\n")
     game = Game()
     game.mainloop()

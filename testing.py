@@ -1,4 +1,4 @@
-import os, shutil
+import os, shutil, sys
 if os.path.isdir("save"):
     shutil.rmtree("save")
 
@@ -15,9 +15,17 @@ _items = [
     "buy", "buy 1", "y", "buy 2", "y", "buy 1", "buy x", "buy 3", # buy cmd (shop)
     "x", "exit", # illegal cmd and exiting shop
     "items", "items 1", "items 2", "items x", "items x x", "items stats", "items stats 1", "items stats 2", "items stats x", "x", # items cmd and illegal cmd
-    "equipment", "equipment x", "equipment equip", "equipment equip 1", "equipment equip 2", "equipment equip 1", "equipment equip x", "equipment unequip", "equipment unequip 1", "equipment unequip 2", "equipment unequip x", # equipment cmd
+    "equipment", "equipment x", "equipment equip", "equipment equip 1", "equipment equip 2", "equipment equip 1", "equipment equip x", "equipment unequip", "equipment unequip sword", "equipment unequip shield", "equipment unequip x", # equipment cmd
     "save", "", "save", "1", "save 1", "n", "save 1", "y", # save cmd
 ]
+
+if "--fast" in sys.argv or "-f" in sys.argv:
+    _items = [
+        "Ray", "", "", # Initialization
+        "shop", "buy 1", "y", "buy 2", "y", "exit", # Shop
+        "equipment equip 1", "equipment equip 2", # Equipment
+        "save 1", # Save
+    ]
 
 def get_input():
     global _n

@@ -1,7 +1,5 @@
 import random, time, sys, os, textwrap, string
 
-# import testing; input = testing.get_input # Comment out if not testing
-
 __all__ = ["CONSTS", "currency", "directions", "print_slow", "input_slow", "table", "clear", "strfdelta"]
 
 CONSTS = {
@@ -13,6 +11,12 @@ if os.name == "nt":
     CONSTS["clear"] = "cls"
 else:
     CONSTS["clear"] = "clear"
+
+if "--test" in sys.argv or "-t" in sys.argv:
+    CONSTS["speed"] = 0
+    import testing; input = testing.get_input # Comment out if not testing
+elif "--fast" in sys.argv or "-f" in sys.argv:
+    CONSTS["speed"] = 0
 
 with open(os.path.join("data", "help.txt"), "r") as f:
     lines = f.read().rstrip().splitlines()
