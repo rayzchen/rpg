@@ -1,4 +1,4 @@
-import random, time, sys, os, math, textwrap
+import random, time, sys, os, textwrap
 
 # import testing; input = testing.get_input # Comment out if not testing
 
