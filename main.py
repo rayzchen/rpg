@@ -571,7 +571,7 @@ def main():
         while True:
             save_name = input_slow("Enter save name to be loaded: ")
             if save_name != "":
-                if os.path.isfile(os.path.join("save", "save_" + save_name)):
+                if os.path.isfile(os.path.join("save", "save_" + save_name + ".rpg")):
                     with open(os.path.join("save", "save_" + save_name + ".rpg"), "rb") as f:
                         save = pickle.load(f)
                     save.mainloop()
