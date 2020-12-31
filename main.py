@@ -110,7 +110,8 @@ class Game:
 
     def save(self, name=None):
         play_time = datetime.datetime.now() - self.opening_time + self.play_time
-        print_slow("Total play time:", strfdelta(play_time, "{D}d, {H}:{M:02}:{S:02}"))
+        print_slow("Total play time:", strfdelta(
+            play_time, "{D}d, {H}:{M:02}:{S:02}"))
         if not name:
             name = input_slow("Enter save name: ")
         if name == "":
@@ -118,7 +119,7 @@ class Game:
             return
         if os.path.isfile(os.path.join("save", "save_" + name + ".rpg")):
             if input_slow("Do you want to overwrite the save file for the save name " +
-                    name + "? (y/n) ").lower() != "y":
+                          name + "? (y/n) ").lower() != "y":
                 return
         if not os.path.isdir("save"):
             os.mkdir("save")
@@ -223,7 +224,7 @@ class Game:
                     break
             print_slow("\nPage", stats_or_page, "of",
                        math.ceil(len(self.player.items) / 10))
-    
+
     def equipment(self, equip=None, item_num=None):
         if equip is None:
             print_slow("Equipped items:\n")
@@ -242,16 +243,16 @@ class Game:
             item = self.player.items[item_int]
             _type = item.stats["type"]
             if _type not in self.player.equipment.equippable:
-                print_slow("Cannot equip", item, "because it is a" + 
+                print_slow("Cannot equip", item, "because it is a" +
                            ("n" if _type[0].lower() in "aeiou" else ""), t_type)
-                
+
             equipped = getattr(self.player.equipment, _type)
             if equipped is not None:
                 if equipped is item:
                     print_slow("You already have", equipped, "equipped!")
                     return
                 if input_slow("You have a" + ("n" if str(equipped)[0].lower() in "aeiou" else "") + " " +
-                        str(equipped) + " equipped currently. Do you want to replace it? (y/n) ") != "y":
+                              str(equipped) + " equipped currently. Do you want to replace it? (y/n) ") != "y":
                     return
             setattr(self.player.equipment, _type, item)
             print_slow("Equipped", str(item) + ".")
@@ -263,7 +264,7 @@ class Game:
             item = getattr(self.player.equipment, item_num)
             if item is None:
                 print_slow("You do not have a" + ("n" if item_num in "aeiou" else ""),
-                    "equipped!")
+                           "equipped!")
                 return
             setattr(self.player.equipment, item_num, None)
             print_slow("Unequipped", str(item) + ".")
@@ -275,8 +276,10 @@ class Game:
             if input_slow("Are you sure you want to sleep? This costs 5 " + currency + "s. (y/n) ") == "y":
                 print_slow("Sleeping...")
                 time.sleep(1)
-                self.time_offset = (datetime.datetime.now() - self.start_time) % datetime.timedelta(seconds=300)
-                print_slow("Time offset is now", strfdelta(self.time_offset, "{D}d, {H}:{M:02}:{S:02}"))
+                self.time_offset = (datetime.datetime.now(
+                ) - self.start_time) % datetime.timedelta(seconds=300)
+                print_slow("Time offset is now", strfdelta(
+                    self.time_offset, "{D}d, {H}:{M:02}:{S:02}"))
         else:
             print_slow("You are OTM - off the map!")
 
@@ -412,7 +415,7 @@ class Item:
         self.name = name
         self.level = 0
         self.stats = stats
-    
+
     def __repr__(self):
         return self.name + " +" + str(self.level)
     __str__ = __repr__
@@ -542,11 +545,11 @@ class Shop:
             print_slow("Item", item_index,
                        "(" + item[0].name + ") has already been sold!")
         elif item[1] > self.player.money:
-            print_slow("You have insufficient funds to buy a" + 
+            print_slow("You have insufficient funds to buy a" +
                        ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name + "!")
         else:
-            answer = input_slow("Are you sure you want to buy a" + 
-                                ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name + 
+            answer = input_slow("Are you sure you want to buy a" +
+                                ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name +
                                 " for " + str(item[1]) + " " + currency + "s? (y/n) ").lower()
             if answer == "y":
                 self.player.money -= item[1]
