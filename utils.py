@@ -1,14 +1,18 @@
-import random, time, sys, os, textwrap
+import random, time, sys, os, textwrap, string
 
 # import testing; input = testing.get_input # Comment out if not testing
 
-__all__ = ["CONSTS", "currency", "directions", "print_slow", "input_slow", "table"]
+__all__ = ["CONSTS", "currency", "directions", "print_slow", "input_slow", "table", "clear", "strfdelta"]
 
 CONSTS = {
     "speed": 0.03, "multiplier": 10,
     "available_commands": [
         "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items", "equipment"],
 }
+if os.name == "nt":
+    CONSTS["clear"] = "cls"
+else:
+    CONSTS["clear"] = "clear"
 
 with open(os.path.join("data", "help.txt"), "r") as f:
     lines = f.read().rstrip().splitlines()
@@ -39,7 +43,7 @@ currency = random.choice(["Alyf", "Ryn", "Iysa"])
 def print_slow(*args, sep=" ", end="\n", speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
     for i, item in enumerate(args):
         for char in str(item):
-            print(end=char)
+            sys.stdout.write(char)
             sys.stdout.flush()
             if char not in punc:
                 time.sleep(speed)
@@ -47,14 +51,14 @@ def print_slow(*args, sep=" ", end="\n", speed=CONSTS["speed"], multiplier=CONST
                 time.sleep(speed * multiplier)
         if i < len(args) - 1:
             for char in str(sep):
-                print(end=char)
+                sys.stdout.write(char)
                 sys.stdout.flush()
                 if char not in punc:
                     time.sleep(speed)
                 else:
                     time.sleep(speed * multiplier)
     for char in str(end):
-        print(end=char)
+        sys.stdout.write(char)
         sys.stdout.flush()
         if char not in punc:
             time.sleep(speed)
@@ -71,3 +75,31 @@ def table(data, spaces):
             ("\t" * spaces).join(data), width=os.get_terminal_size().columns, drop_whitespace=True))
     else:
         print_slow(("\t" * spaces).join(data))
+
+def clear():
+    os.system(CONSTS["clear"])
+
+def strfdelta(tdelta, fmt='{D:02}d {H:02}h {M:02}m {S:02}s', inputtype='timedelta'):
+    # Convert tdelta to integer seconds.
+    if inputtype == 'timedelta':
+        remainder = int(tdelta.total_seconds())
+    elif inputtype in ['s', 'seconds']:
+        remainder = int(tdelta)
+    elif inputtype in ['m', 'minutes']:
+        remainder = int(tdelta)*60
+    elif inputtype in ['h', 'hours']:
+        remainder = int(tdelta)*3600
+    elif inputtype in ['d', 'days']:
+        remainder = int(tdelta)*86400
+    elif inputtype in ['w', 'weeks']:
+        remainder = int(tdelta)*604800
+
+    f = string.Formatter()
+    desired_fields = [field_tuple[1] for field_tuple in f.parse(fmt)]
+    possible_fields = ('W', 'D', 'H', 'M', 'S')
+    constants = {'W': 604800, 'D': 86400, 'H': 3600, 'M': 60, 'S': 1}
+    values = {}
+    for field in possible_fields:
+        if field in desired_fields and field in constants:
+            values[field], remainder = divmod(remainder, constants[field])
+    return f.format(fmt, **values)

@@ -6,6 +6,7 @@ import pickle
 import math
 import inspect
 import re
+import datetime
 from utils import *
 
 class Game:
@@ -22,9 +23,12 @@ class Game:
         self.player = Player(
             name, 50, 50, Experience(), 5, 2, 0
         )
+        self.time_offset = datetime.timedelta(0)
+        self.play_time = datetime.timedelta(0)
         print_slow("Player creation complete...")
         print_slow("Loading player into world...")
         time.sleep(0.5)
+        self.start_time = datetime.datetime.now()
         print()
 
     def load_town_data(self):
@@ -105,25 +109,31 @@ class Game:
                 "There is no Stat that has the name of \"" + item + "\"!")
 
     def save(self, name=None):
+        play_time = datetime.datetime.now() - self.opening_time + self.play_time
+        print_slow("Total play time:", strfdelta(play_time, "{D}d, {H}:{M:02}:{S:02}"))
         if not name:
             name = input_slow("Enter save name: ")
         if name == "":
             print_slow("Cancelled saving.")
             return
         if os.path.isfile(os.path.join("save", "save_" + name + ".rpg")):
-            if input_slow("Do you want to overwrite the save file for the save name " + name + "? (y/n) ").lower() != "y":
+            if input_slow("Do you want to overwrite the save file for the save name " +
+                    name + "? (y/n) ").lower() != "y":
                 return
         if not os.path.isdir("save"):
             os.mkdir("save")
         with open(os.path.join("save", "save_" + name + ".rpg"), "wb+") as f:
+            self.play_time += datetime.datetime.now() - self.opening_time
             pickle.dump(self, f)
             print_slow("Saved successfully!")
+            self.opening_time = datetime.datetime.now()
 
     def cls(self):
-        os.system("cls || clear")
+        clear()
+    clear = cls
 
     def clear(self):
-        os.system("cls || clear")
+        clear()
 
     def gifts(self, claim_or_page="1", claim_number=None):
         if claim_or_page == "claim":
@@ -245,6 +255,12 @@ class Game:
                     return
             setattr(self.player.equipment, _type, item)
             print_slow("Equipped", str(item) + ".")
+        elif equip == "unequip":
+            if item_num is None or item_num not in Equipment.equippable:
+                return -1
+            item = getattr(self.player.equipment, item_num)
+            setattr(self.player.equipment, item_num, None)
+            print_slow("Unequipped", str(item) + ".")
         else:
             return -1
 
@@ -252,10 +268,14 @@ class Game:
         if self.player.town is not None:
             if input_slow("Are you sure you want to sleep? This costs 5 " + currency + "s. (y/n) ") == "y":
                 print_slow("Sleeping...")
+                time.sleep(1)
+                self.time_offset = (datetime.datetime.now() - self.start_time) % datetime.timedelta(seconds=300)
+                print_slow("Time offset is now", strfdelta(self.time_offset, "{D}d, {H}:{M:02}:{S:02}"))
         else:
             print_slow("You are OTM - off the map!")
 
     def mainloop(self):
+        self.opening_time = datetime.datetime.now()
         if not self.started:
             self.setup_player()
             self.load_town_data()
@@ -404,10 +424,6 @@ class Money(Gift):
         else:
             raise Exception("Cannot claim gift before giving it to someone")
 
-class Inn:
-    def sleep(self):
-        print_slow("Sleeping...")
-
 class Shop:
 
     available_commands = ["items", "info", "buy"]
@@ -534,10 +550,10 @@ class Shop:
                            "(" + item[0].name + ") for", item[1], currency + "s.")
 
     def cls(self):
-        os.system("cls || clear")
+        clear()
 
     def clear(self):
-        os.system("cls || clear")
+        clear()
 
 class Floor:
     def __init__(self, num, no_of_towns, town_names, town_descs, prev_floor=None, next_floor=None):
@@ -555,7 +571,6 @@ class Town:
             self.linked_to = {side: connect}
         self.name, self.desc = name, desc
         self.shop = Shop()
-        self.inn = Inn()
 
     def print_description(self):
         print_slow(self.desc)
@@ -566,7 +581,7 @@ class Road:
 
 def main():
     if sys.stdout.isatty():
-        os.system("cls || clear")
+        clear()
     if os.path.isdir("save") and len(os.listdir("save")):
         while True:
             save_name = input_slow("Enter save name to be loaded: ")
@@ -583,4 +598,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    os.system("cls || clear")
+    clear()
