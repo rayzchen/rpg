@@ -7,6 +7,7 @@ import math
 # import inspect
 # import re
 import datetime
+import turtle
 from utils import *
 
 class Game:
@@ -660,9 +661,13 @@ class Floor:
         self.next_floor = next_floor
         assert len(town_names) == len(town_descs)
         self.towns = [Town(
-            name, desc, max(random.randint(1, 3), 2),
+            name, desc,
             random.uniform(0.9 - 0.05 * self.num, 0.95 - 0.05 * self.num)
         ) for name, desc in zip(town_names, town_descs)]
+
+        no_of_3_conenctions = round(1 / 3 * len(self.towns))
+        for town in self.towns[-no_of_3_conenctions:]:
+            town.max_connections = 3
         
         n = 90 + self.num * 10 + 1
         route1 = Route(self.towns[0], random.choice(self.towns[1:]), n)
@@ -712,13 +717,27 @@ class Floor:
         #     for town2, route in town.linked_to.items():
         #         print_slow(route, "(" + town.name, "to", town2.name + ")")
 
+        # points = [(-50, -25), (-100, 50), (50, 100), (100, -50), (-50, -100)]
+        # turtle.hideturtle()
+        # turtle.speed(0)
+        # turtle.penup()
+        # for point in points:
+        #     turtle.goto(*point)
+        #     turtle.dot(10)
+        
+        # for route in self.routes.values():
+        #     turtle.penup()
+        #     turtle.goto(*points[self.towns.index(route.town1)])
+        #     turtle.pendown()
+        #     turtle.goto(*points[self.towns.index(route.town2)])
+
 class Town:
-    def __init__(self, name, desc, max, spawn_rate):
+    def __init__(self, name, desc, spawn_rate):
         self.linked_to = {}
-        if name != "Starting Town":
-            self.max_connections = max
-        else:
+        if name == "Starting Town":
             self.max_connections = 1
+        else:
+            self.max_connections = 2
         self.name, self.desc = name, desc
         self.spawn_rate = spawn_rate
         self.shop = Shop()
