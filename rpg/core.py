@@ -1,6 +1,5 @@
 import random
 import time
-import sys
 import os
 import pickle
 import math
@@ -8,15 +7,16 @@ import datetime
 # import turtle
 
 from .utils import *
-from . import loader
+from .loader import CONSTS
 from .values import *
 
 class Game:
+
+    available_commands = CONSTS["available_commands"]
+    help_commands = CONSTS["help_commands"]
+
     def __init__(self):
         self.started = False
-        loader.load_data()
-        self.available_commands = CONSTS["available_commands"]
-        self.help_commands = CONSTS["help_commands"]
 
     def setup_player(self):
         while not (name := input_slow("Please enter your name: ")):

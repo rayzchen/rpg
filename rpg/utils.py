@@ -1,4 +1,3 @@
-import random
 import time
 import sys
 import os
@@ -7,29 +6,10 @@ import string
 import inspect
 import re
 
+from .loader import CONSTS
+
 __all__ = ["CONSTS", "print_slow", "input_slow",
            "table", "clear", "strfdelta", "mainloop"]
-
-CONSTS = {
-    "speed": 0.03, "multiplier": 10,
-    "available_commands": [
-        "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items",
-        "equipment", "sleep", "travel", "roam"],
-    "currency": random.choice(["Alyf", "Ryn", "Iysa"]),
-    "directions": [
-        "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-}
-if os.name == "nt":
-    CONSTS["clear"] = "cls"
-else:
-    CONSTS["clear"] = "clear"
-
-if "--test" in sys.argv or "-t" in sys.argv:
-    CONSTS["speed"] = 0
-    from . import tests
-    input = tests.get_input  # Comment out if not testing
-elif "--fast" in sys.argv or "-f" in sys.argv:
-    CONSTS["speed"] = 0
 
 punc = ".,?!:;\n"
 def write_slow(item, speed, multiplier):
