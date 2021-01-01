@@ -22,8 +22,10 @@ _items = [
 if "--fast" in sys.argv or "-f" in sys.argv:
     _items = [
         "Ray", "", "", # Initialization
+        "gifts claim 1", # Gifts
         "shop", "buy 1", "y", "buy 2", "y", "exit", # Shop
         "equipment equip 1", "equipment equip 2", # Equipment
+        "hunting", "\n", "\n", "\n", "\n",
         "travel", "y", "travel", "102", "travel", "\n", # Travel
         "save 1", # Save
     ]

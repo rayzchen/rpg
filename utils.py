@@ -13,7 +13,7 @@ __all__ = ["CONSTS", "print_slow", "input_slow",
 CONSTS = {
     "speed": 0.03, "multiplier": 10,
     "available_commands": [
-        "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items", "equipment", "sleep", "travel"],
+        "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items", "equipment", "sleep", "travel", "hunting"],
     "currency": random.choice(["Alyf", "Ryn", "Iysa"]),
     "directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
 }

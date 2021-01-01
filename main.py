@@ -27,7 +27,7 @@ class Game:
         self.play_time = datetime.timedelta(0)
         print_slow("Player creation complete...")
         print_slow("Loading player into world...")
-        time.sleep(0.5)
+        time.sleep(1)
         self.start_time = datetime.datetime.now()
         print()
 
@@ -311,20 +311,33 @@ class Game:
             choice = routes[route_numbers.index(answer)]
         print_slow("Travelling along", str(choice) + "...")
 
-        time.sleep(0.5) # Replace with monster fighting
+        time.sleep(1) # Replace with monster fighting
 
         if isinstance(choice.get_other(self.player.town), Route):
             print_slow("Reached the center of Double Route", str(choice.num) + "/" +
                 str(choice.get_other(self.player.town).num) + ".")
             print_slow("Travelling along", str(choice.get_other(self.player.town)) + "...")
 
-            time.sleep(0.5) # Replace with monster fighting
+            time.sleep(1) # Replace with monster fighting
 
             print_slow("Reached", choice.get_other(self.player.town).get_other(choice).name + ".")
             self.player.town = choice.get_other(self.player.town).get_other(choice)
         else:
             print_slow("Reached", choice.get_other(self.player.town).name + ".")
             self.player.town = choice.get_other(self.player.town)
+    
+    def hunting(self):
+        print_slow("You go to the edge of the town, and start roaming around for a monster to fight.")
+        while True:
+            print_slow("Roaming around...")
+            time.sleep(random.random() * 3 + 2)
+            if random.random() < self.player.town.spawn_rate:
+                print_slow("A twig snaps, and something emerges out of the shadows.")
+                # Fight
+            if input_slow("Do you want to continue roaming around? (y/n) ") != "y":
+                print_slow("You journey back to the town.")
+                time.sleep(1)
+                break
 
     def mainloop(self):
         self.opening_time = datetime.datetime.now()
@@ -412,6 +425,8 @@ class Player(LifeForm):
         self.town = None
         self.floor = None
         self.equipment = Equipment()
+        self.thirst = 50
+        self.hunger = 50
     
     @property
     def total_attack(self):
@@ -642,8 +657,10 @@ class Floor:
         self.prev_floor = prev_floor
         self.next_floor = next_floor
         assert len(town_names) == len(town_descs)
-        self.towns = [Town(name, desc, max(random.randint(1, 3), 2)) for name, desc
-                      in zip(town_names, town_descs)]
+        self.towns = [Town(
+            name, desc, max(random.randint(1, 3), 2),
+            random.uniform(0.9 - 0.05 * self.num, 0.95 - 0.05 * self.num)
+        ) for name, desc in zip(town_names, town_descs)]
         
         n = 90 + self.num * 10 + 1
         self.routes = {}
@@ -681,13 +698,14 @@ class Floor:
             replacement.num = n
 
 class Town:
-    def __init__(self, name, desc, max=2):
+    def __init__(self, name, desc, spawn_rate, max=2):
         self.linked_to = {}
         if name != "Starting Town":
             self.max_connections = max
         else:
             self.max_connections = 1
         self.name, self.desc = name, desc
+        self.spawn_rate = spawn_rate
         self.shop = Shop()
 
     def print_description(self):
