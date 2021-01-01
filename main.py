@@ -57,13 +57,13 @@ class Game:
         direction = random.randint(0, 7)
         route = list(self.player.town.linked_to.values())[0]
         print_slow(lines[0] % (self.player.name,
-                               route.town2.name, directions[direction]))
+                               route.town2.name, CONSTS["directions"][direction]))
         input_slow("\nPress Enter to continue\n")
         self.player.print_stats()
         print()
-        print_slow(lines[1] % currency)
+        print_slow(lines[1] % CONSTS["currency"])
         Money("Tour Guide", 200).give(self.player)
-        print_slow(lines[2] % currency)
+        print_slow(lines[2] % CONSTS["currency"])
         input_slow("\nPress Enter to continue\n")
 
     def help(self, item=None):
@@ -77,7 +77,10 @@ class Game:
             table(self.available_commands, 2)
         elif item in self.available_commands:
             print_slow("Help on command", item + ":\n")
-            print_slow(self.help_commands[item])
+            if "%s" in self.help_commands[item]:
+                print_slow(self.help_commands[item] % CONSTS["currency"])
+            else:
+                print_slow(self.help_commands[item])
         else:
             print_slow("\"" + item + "\"", "is not a valid command!")
 
@@ -97,7 +100,7 @@ class Game:
             print_slow("Defense points:", format(self.player.total_defense, ","))
         elif item == "money":
             print_slow("Money:", format(
-                self.player.money, ",") + " " + currency + "s")
+                self.player.money, ",") + " " + CONSTS["currency"] + "s")
         else:
             print_slow(
                 "There is no Stat that has the name of \"" + item + "\"!")
@@ -172,7 +175,7 @@ class Game:
         if self.player.town is not None:
             if desc == "description":
                 print()
-                print_slow(*self.player.town.desc)
+                print_slow(self.player.town.desc)
             else:
                 print_slow("You are on Floor", self.player.floor.num,
                            "and are at", self.player.town.name + ".")
@@ -181,7 +184,7 @@ class Game:
 
     def shop(self):
         print()
-        print_slow("You have", self.player.money, currency + "s.\n")
+        print_slow("You have", self.player.money, CONSTS["currency"] + "s.\n")
         self.player.town.shop.mainloop(self.player)
 
     def items(self, stats_or_page="1", num=""):
@@ -271,7 +274,7 @@ class Game:
 
     def sleep(self):
         if self.player.town is not None:
-            if input_slow("Are you sure you want to sleep? This costs 5 " + currency + "s. (y/n) ") == "y":
+            if input_slow("Are you sure you want to sleep? This costs 5 " + CONSTS["currency"] + "s. (y/n) ") == "y":
                 print_slow("Sleeping...")
                 time.sleep(1)
                 self.time_offset = (datetime.datetime.now(
@@ -280,6 +283,48 @@ class Game:
                     self.time_offset, "{D}d, {H}:{M:02}:{S:02}"))
         else:
             print_slow("You are OTM - off the map!")
+    
+    def travel(self):
+        print_slow("Routes connected to this town (" + self.player.town.name + "):\n")
+        for town2, route in self.player.town.linked_to.items():
+            print_slow("Route", route.num, "(Connects to", town2.name + ")", end="")
+            if town2.linked_to[self.player.town] is not route:
+                print_slow(" Note: Double route via Route", town2.linked_to[self.player.town].num)
+            else:
+                print()
+        
+        towns = list(self.player.town.linked_to.keys())
+        routes = list(self.player.town.linked_to.values())
+        route_numbers = list(map(lambda x: str(x.num), routes))
+        if len(towns) == 1:
+            if input_slow("Would you like to travel along " + routes[0].name + " to " +
+                    towns[0].name + "? (y/n) ") == "y":
+                choice = routes[0]
+            else:
+                return
+        else:
+            while (answer := input_slow("Enter Route number to travel along: ")) not in route_numbers:
+                if not answer:
+                    return
+                print_slow("That is not a valid Route!")
+                print_slow("Available routes:", ", ".join(route_numbers))
+            choice = routes[route_numbers.index(answer)]
+        print_slow("Travelling along", str(choice) + "...")
+
+        time.sleep(0.5) # Replace with monster fighting
+
+        if isinstance(choice.get_other(self.player.town), Route):
+            print_slow("Reached the center of Double Route", str(choice.num) + "/" +
+                str(choice.get_other(self.player.town).num) + ".")
+            print_slow("Travelling along", str(choice.get_other(self.player.town)) + "...")
+
+            time.sleep(0.5) # Replace with monster fighting
+
+            print_slow("Reached", choice.get_other(self.player.town).get_other(choice).name + ".")
+            self.player.town = choice.get_other(self.player.town).get_other(choice)
+        else:
+            print_slow("Reached", choice.get_other(self.player.town).name + ".")
+            self.player.town = choice.get_other(self.player.town)
 
     def mainloop(self):
         self.opening_time = datetime.datetime.now()
@@ -393,7 +438,7 @@ class Player(LifeForm):
         print_slow("Experience:", self.experience)
         print_slow("Attack damage:", self.total_attack)
         print_slow("Defense points:", self.total_defense)
-        print_slow("Money:", format(self.money, ","), currency + "s")
+        print_slow("Money:", format(self.money, ","), CONSTS["currency"] + "s")
 
 class Equipment:
     equippable = ["sword", "shield", "cloak", "helmet", "shoes"]
@@ -446,7 +491,7 @@ class Item:
 class Money(Gift):
     def __init__(self, from_who, amount):
         super(Money, self).__init__(from_who, format(
-            amount, ",") + " " + currency + "s", None, amount)
+            amount, ",") + " " + CONSTS["currency"] + "s", None, amount)
 
     def claim(self):
         if self.player is not None:
@@ -517,7 +562,7 @@ class Shop:
             print_slow("Defense points:", format(self.player.total_defense, ","))
         elif item == "money":
             print_slow("Money:", format(
-                self.player.money, ",") + " " + currency + "s")
+                self.player.money, ",") + " " + CONSTS["currency"] + "s")
         else:
             print_slow(
                 "There is no Stat that has the name of \"" + item + "\"!")
@@ -536,7 +581,7 @@ class Shop:
                 print_slow("Item", str(i + 1) + ":", item.name, "(SOLD)")
             else:
                 print_slow("Item", str(i + 1) + ":", item.name,
-                           "\tPrice:", price, currency + "s")
+                           "\tPrice:", price, CONSTS["currency"] + "s")
             i += 1
             if i >= (page_num + 1) * 5:
                 break
@@ -577,13 +622,13 @@ class Shop:
         else:
             answer = input_slow("Are you sure you want to buy a" +
                                 ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name +
-                                " for " + str(item[1]) + " " + currency + "s? (y/n) ").lower()
+                                " for " + str(item[1]) + " " + CONSTS["currency"] + "s? (y/n) ").lower()
             if answer == "y":
                 self.player.money -= item[1]
                 self.player.items.append(item[0])
                 item[2] = True
                 print_slow("You have bought item", item_index,
-                           "(" + item[0].name + ") for", item[1], currency + "s.")
+                           "(" + item[0].name + ") for", item[1], CONSTS["currency"] + "s.")
 
     def cls(self):
         clear()
@@ -652,6 +697,18 @@ class Route:
     def __init__(self, town1, town2, num):
         self.town1, self.town2, self.num = town1, town2, num
         self.name = "Route " + str(num)
+    
+    def __repr__(self):
+        return self.name
+    __str__ = __repr__
+    
+    def get_other(self, other):
+        if other is self.town1:
+            return self.town2
+        elif other is self.town2:
+            return self.town2
+        else:
+            raise ValueError(other.name + " is not part of this Route!")
 
 def main():
     if sys.stdout.isatty():

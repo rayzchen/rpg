@@ -24,16 +24,18 @@ if "--fast" in sys.argv or "-f" in sys.argv:
         "Ray", "", "", # Initialization
         "shop", "buy 1", "y", "buy 2", "y", "exit", # Shop
         "equipment equip 1", "equipment equip 2", # Equipment
+        "travel", "y", "travel", "102", "travel", "\n", # Travel
         "save 1", # Save
     ]
 
 def get_input():
     global _n
     if _n >= len(_items):
-        print()
-        exit()
+        return input()
     else:
+        if _items[_n] == "\n":
+            _n += 1
+            return input()
         print(_items[_n])
         _n += 1
-        # input()
         return _items[_n - 1]

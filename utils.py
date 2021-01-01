@@ -7,13 +7,15 @@ import string
 import inspect
 import re
 
-__all__ = ["CONSTS", "currency", "directions", "print_slow",
-           "input_slow", "table", "clear", "strfdelta", "mainloop"]
+__all__ = ["CONSTS", "print_slow", "input_slow",
+           "table", "clear", "strfdelta", "mainloop"]
 
 CONSTS = {
     "speed": 0.03, "multiplier": 10,
     "available_commands": [
-        "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items", "equipment"],
+        "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items", "equipment", "sleep", "travel"],
+    "currency": random.choice(["Alyf", "Ryn", "Iysa"]),
+    "directions": ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
 }
 if os.name == "nt":
     CONSTS["clear"] = "cls"
@@ -51,28 +53,8 @@ for item in items:
     CONSTS["items"].append(item_dict)
 
 punc = ".,?!:;\n"
-directions = ["north", "northeast", "east", "southeast",
-              "south", "southwest", "west", "northwest"]
-currency = random.choice(["Alyf", "Ryn", "Iysa"])
-
-def print_slow(*args, sep=" ", end="\n", speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
-    for i, item in enumerate(args):
-        for char in str(item):
-            sys.stdout.write(char)
-            sys.stdout.flush()
-            if char not in punc:
-                time.sleep(speed)
-            else:
-                time.sleep(speed * multiplier)
-        if i < len(args) - 1:
-            for char in str(sep):
-                sys.stdout.write(char)
-                sys.stdout.flush()
-                if char not in punc:
-                    time.sleep(speed)
-                else:
-                    time.sleep(speed * multiplier)
-    for char in str(end):
+def write_slow(item, speed, multiplier):
+    for char in str(item):
         sys.stdout.write(char)
         sys.stdout.flush()
         if char not in punc:
@@ -80,8 +62,16 @@ def print_slow(*args, sep=" ", end="\n", speed=CONSTS["speed"], multiplier=CONST
         else:
             time.sleep(speed * multiplier)
 
+def print_slow(*args, sep=" ", end="\n", speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
+    for i, item in enumerate(args):
+        write_slow(item, speed, multiplier)
+        if i < len(args) - 1:
+            write_slow(sep, speed, multiplier)
+    for char in str(end):
+        write_slow(end, speed, multiplier)
+
 def input_slow(text, speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
-    print_slow(end=text)
+    write_slow(text, speed, multiplier)
     return input()
 
 def table(data, spaces):
