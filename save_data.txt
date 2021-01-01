@@ -1,0 +1,10 @@
+{'started': True, 'opening_time': datetime.datetime(2021, 1, 1, 22, 49, 46, 710867), 'player': <rpg.core.Player object at 0x00E35B08>, 'time_offset': datetime.timedelta(0), 'play_time': datetime.timedelta(seconds=21, microseconds=893638), 'start_time': datetime.datetime(2021, 1, 1, 22, 49, 47, 753353), 'starting_town': {'name': 'Starting Town', 'desc': ['This is a small town with a few NPCs walking around. In the north, a busy shopping market bustles around. A few inns litter the central square. In the south, a large forest sweeps across the land.']}, 'town_names': ['Ryvathemar', 'Thylelthemar', 'Saalian', 'Lylse Elunore', 'Nelva Anore'], 'town_descs': OOF, 'floors': [<rpg.core.Floor object at 0x00E44160>]}
+
+player
+{'name': 'Ray', 'health': 50, 'max_health': 50, 'attack': 5, 'defense': 2, 'experience': 0 (Level 0 + 0), 'money': 55, 'gifts': [], 'items': [Wooden Sword +0, Wooden Shield +0], 'town': <rpg.core.Town object at 0x00E35BC8>, 'floor': <rpg.core.Floor object at 0x00E44160>, 'equipment': <rpg.values.Equipment object at 0x00E441F0>, 'thirst': 50, 'hunger': 50}
+
+equipment
+{'sword': Wooden Sword +0, 'shield': Wooden Shield +0, 'cloak': None, 'helmet': None, 'shoes': None}
+
+floor 1
+{'num': 1, 'prev_floor': None, 'next_floor': None, 'towns': [<rpg.core.Town object at 0x00E35C10>, <rpg.core.Town object at 0x00E35BE0>, <rpg.core.Town object at 0x00E35D00>, <rpg.core.Town object at 0x00E35BC8>, <rpg.core.Town object at 0x00E35BF8>], 'routes': OOF}

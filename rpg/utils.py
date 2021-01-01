@@ -11,6 +11,10 @@ from .loader import CONSTS
 __all__ = ["CONSTS", "print_slow", "input_slow",
            "table", "clear", "strfdelta", "mainloop"]
 
+if "--test" in sys.argv or "-t" in sys.argv:
+    from . import tests
+    input = tests.get_input  # Comment out if not testing
+
 punc = ".,?!:;\n"
 def write_slow(item, speed, multiplier):
     for char in str(item):
