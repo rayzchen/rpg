@@ -277,8 +277,8 @@ class Game:
             if input_slow("Are you sure you want to sleep? This costs 5 " + CONSTS["currency"] + "s. (y/n) ") == "y":
                 print_slow("Sleeping...")
                 time.sleep(1)
-                self.time_offset = (datetime.datetime.now(
-                ) - self.start_time) % datetime.timedelta(seconds=300)
+                self.time_offset = (datetime.datetime.now() - 
+                self.opening_time) % datetime.timedelta(seconds=300)
                 print_slow("Time offset is now", strfdelta(
                     self.time_offset, "{D}d, {H}:{M:02}:{S:02}"))
         else:
@@ -310,6 +310,8 @@ class Game:
                 print_slow("Available routes:", ", ".join(route_numbers))
             choice = routes[route_numbers.index(answer)]
         print_slow("Travelling along", str(choice) + "...")
+        
+        print(choice.town1.name, choice.town2.name, self.player.town.name)
 
         time.sleep(1) # Replace with monster fighting
 
@@ -663,16 +665,24 @@ class Floor:
         ) for name, desc in zip(town_names, town_descs)]
         
         n = 90 + self.num * 10 + 1
-        self.routes = {}
-        for town1_i in range(len(self.towns)):
+        route1 = Route(self.towns[0], random.choice(self.towns[1:]), n)
+        self.towns[0].linked_to[route1.town2] = route1
+        route1.town2.linked_to[self.towns[0]] = route1
+        self.routes = {n - 1: route1}
+        n += 1
+        town_list1 = list(range(len(self.towns)))
+        town_list2 = list(range(len(self.towns)))
+        random.shuffle(town_list1)
+        random.shuffle(town_list2)
+        for town1_i in town_list1:
             town1 = self.towns[town1_i]
             if len(town1.linked_to) == town1.max_connections:
                 continue
-            for town2_i in range(len(self.towns)):
-                if town1_i == town2_i:
-                    continue
+            for town2_i in town_list2:
                 town2 = self.towns[town2_i]
-                if (len(town2.linked_to) < town2.max_connections and town2 not in town1.linked_to):
+                if town1_i == town2_i or len(town2.linked_to) == town2.max_connections:
+                    continue
+                if town2 not in town1.linked_to:
                     route = Route(town1, town2, n)
                     self.routes[n] = route
                     town1.linked_to[town2] = route
@@ -696,9 +706,14 @@ class Floor:
             self.routes[double_route.num + 1] = route2
             self.routes[n] = replacement
             replacement.num = n
+        
+        # for town in self.towns:
+        #     print_slow(town.max_connections)
+        #     for town2, route in town.linked_to.items():
+        #         print_slow(route, "(" + town.name, "to", town2.name + ")")
 
 class Town:
-    def __init__(self, name, desc, spawn_rate, max=2):
+    def __init__(self, name, desc, max, spawn_rate):
         self.linked_to = {}
         if name != "Starting Town":
             self.max_connections = max
@@ -724,7 +739,7 @@ class Route:
         if other is self.town1:
             return self.town2
         elif other is self.town2:
-            return self.town2
+            return self.town1
         else:
             raise ValueError(other.name + " is not part of this Route!")
 
