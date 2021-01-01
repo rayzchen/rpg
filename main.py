@@ -4,8 +4,8 @@ import sys
 import os
 import pickle
 import math
-import inspect
-import re
+# import inspect
+# import re
 import datetime
 from utils import *
 
@@ -92,9 +92,9 @@ class Game:
         elif item == "experience":
             print_slow("Experience:", self.player.experience)
         elif item == "attack":
-            print_slow("Attack damage:", format(self.player.attack, ","))
+            print_slow("Attack damage:", format(self.player.total_attack, ","))
         elif item == "defense":
-            print_slow("Defense points:", format(self.player.defense, ","))
+            print_slow("Defense points:", format(self.player.total_defense, ","))
         elif item == "money":
             print_slow("Money:", format(
                 self.player.money, ",") + " " + currency + "s")
@@ -197,7 +197,10 @@ class Game:
             for stat_name, stat_value in item.stats.items():
                 if stat_name == "type":
                     continue
-                print_slow(Shop.stat_keys[stat_name] + ":", stat_value)
+                if isinstance(stat_value, int):
+                    print_slow(Shop.stat_keys[stat_name] + ":", format(stat_value, ","))
+                else:
+                    print_slow(Shop.stat_keys[stat_name] + ":", stat_value)
         else:
             if not stats_or_page.isdecimal():
                 return -1
@@ -254,11 +257,12 @@ class Game:
             if item_num is None:
                 return -1
             if item_num not in Equipment.equippable:
-                print_slow("You cannot unequip", item_num + "!")
+                print_slow("There is no type of equipment called", item_num + "!")
+                return
             item = getattr(self.player.equipment, item_num)
             if item is None:
-                print_slow("You do not have a" + ("n" if item_num in "aeiou" else ""),
-                           "equipped!")
+                print_slow("You do not have a" + ("n" if item_num[0] in "aeiou" else ""),
+                           item_num, "equipped!")
                 return
             setattr(self.player.equipment, item_num, None)
             print_slow("Unequipped", str(item) + ".")
@@ -285,28 +289,29 @@ class Game:
             self.setup_floor1()
             self.introduction()
             self.started = True
-        while True:
-            try:
-                command = re.subn(
-                    " +", input_slow("Menu> ").lstrip().rstrip().lower(), " ")[0]
-                cmd_args = command.split(" ")
-            except KeyboardInterrupt:
-                print()
-                break
-            except EOFError:
-                break
-            if not len(cmd_args[0]) or not cmd_args[0]:
-                print()
-                continue
-            if cmd_args[0] == "exit":
-                break
-            if cmd_args[0] in self.available_commands:
-                func = getattr(self, cmd_args[0])
-                if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
-                    if not func(*cmd_args[1:]) == -1:
-                        print()
-                        continue
-            print_slow("\"" + command + "\"", "is not a valid command!\n")
+        mainloop(self, "Menu")
+        # while True:
+        #     try:
+        #         command = re.subn(
+        #             " +", input_slow("Menu> ").lstrip().rstrip().lower(), " ")[0]
+        #         cmd_args = command.split(" ")
+        #     except KeyboardInterrupt:
+        #         print()
+        #         break
+        #     except EOFError:
+        #         break
+        #     if not len(cmd_args[0]) or not cmd_args[0]:
+        #         print()
+        #         continue
+        #     if cmd_args[0] == "exit":
+        #         break
+        #     if cmd_args[0] in self.available_commands:
+        #         func = getattr(self, cmd_args[0])
+        #         if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
+        #             if not func(*cmd_args[1:]) == -1:
+        #                 print()
+        #                 continue
+        #     print_slow("\"" + command + "\"", "is not a valid command!\n")
 
 class Experience:
     def __init__(self):
@@ -362,14 +367,32 @@ class Player(LifeForm):
         self.town = None
         self.floor = None
         self.equipment = Equipment()
+    
+    @property
+    def total_attack(self):
+        total = self.attack
+        for item in self.equipment:
+            if item is None:
+                continue
+            total += item.stats["attack"]
+        return total
+    
+    @property
+    def total_defense(self):
+        total = self.defense
+        for item in self.equipment:
+            if item is None:
+                continue
+            total += item.stats["defense"]
+        return total
 
     def print_stats(self):
         print_slow("Player Stats\n")
         print_slow("Name:", self.name)
         print_slow("Health:", str(self.health) + "/" + str(self.max_health))
         print_slow("Experience:", self.experience)
-        print_slow("Attack damage:", self.attack)
-        print_slow("Defense points:", self.defense)
+        print_slow("Attack damage:", self.total_attack)
+        print_slow("Defense points:", self.total_defense)
         print_slow("Money:", format(self.money, ","), currency + "s")
 
 class Equipment:
@@ -380,6 +403,12 @@ class Equipment:
         self.cloak = None
         self.helmet = None
         self.shoes = None
+    
+    def __list__(self):
+        return [getattr(self, item) for item in self.equippable]
+    
+    def __iter__(self):
+        return iter(getattr(self, item) for item in self.equippable)
 
 class Gift:
     def __init__(self, from_who, item_name, item, amount, args=[]):
@@ -431,7 +460,7 @@ class Shop:
 
     available_commands = ["items", "info", "buy"]
     stat_keys = {
-        "attack": "Attack Damage", "defense": "Defense Points", "desc": "Description", "effect": "Effect",
+        "attack": "Attack Boost", "defense": "Defense Boost", "desc": "Description", "effect": "Effect",
     }
 
     def __init__(self):
@@ -447,28 +476,29 @@ class Shop:
 
     def mainloop(self, player):
         self.player = player
-        while True:
-            try:
-                command = re.subn(
-                    " +", input_slow("Shop> ").lstrip().rstrip().lower(), " ")[0]
-                cmd_args = command.split(" ")
-            except KeyboardInterrupt:
-                print()
-                break
-            except EOFError:
-                break
-            if not len(cmd_args[0]) or not cmd_args[0]:
-                print()
-                continue
-            if cmd_args[0] == "exit":
-                break
-            if cmd_args[0] in self.available_commands:
-                func = getattr(self, cmd_args[0])
-                if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
-                    if not func(*cmd_args[1:]) == -1:
-                        print()
-                        continue
-            print_slow("\"" + command + "\"", "is not a valid command!\n")
+        mainloop(self, "Shop")
+        # while True:
+        #     try:
+        #         command = re.subn(
+        #             " +", input_slow("Shop> ").lstrip().rstrip().lower(), " ")[0]
+        #         cmd_args = command.split(" ")
+        #     except KeyboardInterrupt:
+        #         print()
+        #         break
+        #     except EOFError:
+        #         break
+        #     if not len(cmd_args[0]) or not cmd_args[0]:
+        #         print()
+        #         continue
+        #     if cmd_args[0] == "exit":
+        #         break
+        #     if cmd_args[0] in self.available_commands:
+        #         func = getattr(self, cmd_args[0])
+        #         if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
+        #             if not func(*cmd_args[1:]) == -1:
+        #                 print()
+        #                 continue
+        #     print_slow("\"" + command + "\"", "is not a valid command!\n")
         self.player = None
 
     def stats(self, item=None):
@@ -477,14 +507,14 @@ class Shop:
         elif item == "name":
             print_slow("Name:", self.player.name)
         elif item == "health":
-            print_slow("Health:", str(self.player.health) +
-                       "/" + str(self.player.max_health))
+            print_slow("Health:", format(self.player.health, ",") +
+                       "/" + format(self.player.max_health, ","))
         elif item == "experience":
             print_slow("Experience:", self.player.experience)
         elif item == "attack":
-            print_slow("Attack damage:", self.player.attack)
+            print_slow("Attack damage:", format(self.player.total_attack, ","))
         elif item == "defense":
-            print_slow("Defense points:", self.player.defense)
+            print_slow("Defense points:", format(self.player.total_defense, ","))
         elif item == "money":
             print_slow("Money:", format(
                 self.player.money, ",") + " " + currency + "s")
@@ -524,7 +554,10 @@ class Shop:
         for stat_name, stat_value in item.stats.items():
             if stat_name == "type":
                 continue
-            print_slow(self.stat_keys[stat_name] + ":", stat_value)
+            if isinstance(stat_value, int):
+                print_slow(self.stat_keys[stat_name] + ":", format(stat_value, ","))
+            else:
+                print_slow(self.stat_keys[stat_name] + ":", stat_value)
         print_slow("Price:", self.selling[item_num][1])
 
     def buy(self, item_index=None):
