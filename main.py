@@ -598,7 +598,6 @@ class Floor:
             self.routes[double_route.num + 1] = route2
         else:
             replacement = self.routes[double_route.num + 1]
-            print(replacement.num)
             self.routes[double_route.num + 1] = route2
             self.routes[n] = replacement
             replacement.num = n
