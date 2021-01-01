@@ -41,29 +41,23 @@ class Game:
         self.town_descs = list(map(lambda x: x[1:], towns))
 
     def setup_floor1(self):
-        self.floors = [Floor(1, 4, self.town_names[:4], self.town_descs[:4])]
+        self.floors = [Floor(1,
+                [self.starting_town["name"]] + self.town_names[:4],
+                [self.starting_town["desc"]] + self.town_descs[:4])]
         del self.town_names[:4], self.town_descs[:4]
 
-        starting_floor = self.floors[0]
-        name, desc = self.starting_town["name"], self.starting_town["desc"]
-        self.starting_town = Town(name, desc)
-
-        road = Road(self.starting_town, random.choice(starting_floor.towns))
-        direction = random.randint(0, 7)
-        self.starting_town.linked_to = {direction: road}
-        starting_floor.towns.append(self.starting_town)
-
-        self.player.floor = starting_floor
-        self.player.town = self.starting_town
+        self.player.floor = self.floors[0]
+        self.player.town = self.floors[0].towns[0]
 
     def introduction(self):
         with open(os.path.join("data", "intro.txt"), "r") as f:
             lines = f.read().rstrip().splitlines()
         assert len(lines) == 3
 
-        direction, road = list(self.player.town.linked_to.items())[0]
+        direction = random.randint(0, 7)
+        route = list(self.player.town.linked_to.values())[0]
         print_slow(lines[0] % (self.player.name,
-                               road.town2.name, directions[direction]))
+                               route.town2.name, directions[direction]))
         input_slow("\nPress Enter to continue\n")
         self.player.print_stats()
         print()
@@ -294,7 +288,7 @@ class Game:
         while True:
             try:
                 command = re.subn(
-                    " +", input_slow("Menu> ").rstrip().lower(), " ")[0]
+                    " +", input_slow("Menu> ").lstrip().rstrip().lower(), " ")[0]
                 cmd_args = command.split(" ")
             except KeyboardInterrupt:
                 print()
@@ -456,7 +450,7 @@ class Shop:
         while True:
             try:
                 command = re.subn(
-                    " +", input_slow("Shop> ").rstrip().lower(), " ")[0]
+                    " +", input_slow("Shop> ").lstrip().rstrip().lower(), " ")[0]
                 cmd_args = command.split(" ")
             except KeyboardInterrupt:
                 print()
@@ -565,28 +559,67 @@ class Shop:
         clear()
 
 class Floor:
-    def __init__(self, num, no_of_towns, town_names, town_descs, prev_floor=None, next_floor=None):
+    def __init__(self, num, town_names, town_descs, prev_floor=None, next_floor=None):
         self.num = num
         self.prev_floor = prev_floor
         self.next_floor = next_floor
-        self.towns = [Town(name, desc) for i, (name, desc)
-                      in enumerate(zip(town_names, town_descs))]
+        assert len(town_names) == len(town_descs)
+        self.towns = [Town(name, desc, max(random.randint(1, 3), 2)) for name, desc
+                      in zip(town_names, town_descs)]
+        
+        n = 90 + self.num * 10 + 1
+        self.routes = {}
+        for town1_i in range(len(self.towns)):
+            town1 = self.towns[town1_i]
+            if len(town1.linked_to) == town1.max_connections:
+                continue
+            for town2_i in range(len(self.towns)):
+                if town1_i == town2_i:
+                    continue
+                town2 = self.towns[town2_i]
+                if (len(town2.linked_to) < town2.max_connections and town2 not in town1.linked_to):
+                    route = Route(town1, town2, n)
+                    self.routes[n] = route
+                    town1.linked_to[town2] = route
+                    town2.linked_to[town1] = route
+                    n += 1
+                if len(town1.linked_to) == town1.max_connections:
+                    break
+        
+        double_route = list(self.routes.values())[random.randrange(1, len(self.routes))]
+        route1 = Route(double_route.town1, None, double_route.num)
+        route2 = Route(route1, double_route.town2, double_route.num + 1)
+        route1.town2 = route2
+        double_route.town1.linked_to[double_route.town2] = route1
+        double_route.town2.linked_to[double_route.town1] = route2
+
+        self.routes[double_route.num] = route1
+        if double_route.num + 1 not in self.routes:
+            self.routes[double_route.num + 1] = route2
+        else:
+            replacement = self.routes[double_route.num + 1]
+            print(replacement.num)
+            self.routes[double_route.num + 1] = route2
+            self.routes[n] = replacement
+            replacement.num = n
 
 class Town:
-    def __init__(self, name, desc, connect=None, side=None):
-        if connect is None:
-            self.linked_to = {}
+    def __init__(self, name, desc, max=2):
+        self.linked_to = {}
+        if name != "Starting Town":
+            self.max_connections = max
         else:
-            self.linked_to = {side: connect}
+            self.max_connections = 1
         self.name, self.desc = name, desc
         self.shop = Shop()
 
     def print_description(self):
         print_slow(self.desc)
 
-class Road:
-    def __init__(self, town1, town2):
-        self.town1, self.town2 = town1, town2
+class Route:
+    def __init__(self, town1, town2, num):
+        self.town1, self.town2, self.num = town1, town2, num
+        self.name = "Route " + str(num)
 
 def main():
     if sys.stdout.isatty():
