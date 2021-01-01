@@ -1,2 +1,2 @@
 language = "bash"
-run = "python main.py"
+run = "git pull && python main.py"

@@ -1,6 +1,8 @@
-import os, shutil, sys
-if os.path.isdir("save"):
-    shutil.rmtree("save")
+import os
+import shutil
+import sys
+if os.path.isdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "save")):
+    shutil.rmtree(os.path.join(os.path.dirname(os.path.abspath(__file__)), "save"))
 
 _n = 0
 _items = [
@@ -25,7 +27,7 @@ if "--fast" in sys.argv or "-f" in sys.argv:
         "gifts claim 1", # Gifts
         "shop", "buy 1", "y", "buy 2", "y", "exit", # Shop
         "equipment equip 1", "equipment equip 2", # Equipment
-        "hunting", "\n", "\n", "\n", "\n",
+        "roam", "\n", "\n", "\n", "\n",
         "travel", "y", "travel", "102", "travel", "\n", # Travel
         "save 1", # Save
     ]

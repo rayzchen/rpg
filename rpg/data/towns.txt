@@ -1,0 +1,29 @@
+Starting Town
+This is a small town with a few NPCs walking around. In the north, a busy shopping market bustles around. A few inns litter the central square. In the south, a large forest sweeps across the land.
+
+Syen Unarith
+Morbi hendrerit aliquam magna, in placerat massa dictum non. Vestibulum dapibus ut lectus id fermentum. Quisque ut lorem turpis. In a nunc non velit feugiat placerat vitae quis diam. Nullam accumsan, ante non dapibus euismod, neque ex tincidunt risus, ac bibendum lectus tellus eget orci. Morbi rhoncus felis sit amet bibendum viverra. Sed volutpat, magna id efficitur mattis, ex libero consectetur nisi, a pretium lorem turpis id velit. Duis congue, metus et dignissim pulvinar, neque metus dictum metus, quis pulvinar felis lorem non magna. Pellentesque faucibus tempus ligula aliquam fringilla. Sed sagittis est massa, vel rutrum elit venenatis nec. Phasellus semper a odio vitae dapibus. Quisque sit amet venenatis nisi.
+
+Raslin
+Vivamus egestas erat id mi congue, sed elementum sapien varius. Curabitur quis lacus porta, vehicula lacus ac, aliquam augue. Morbi vitae lectus et nulla convallis hendrerit quis quis sapien. Donec nunc dolor, volutpat id nibh id, tempor tincidunt risus. Aenean elementum et velit nec placerat. Sed vel iaculis neque. Mauris risus ipsum, feugiat a dolor eget, rhoncus luctus ligula. Nam urna arcu, finibus a diam eget, tincidunt auctor ligula. Etiam convallis metus velit, quis lacinia lorem tempor eget. Duis ac posuere mi. Fusce accumsan libero eu sagittis posuere.
+
+Ryvathemar
+Nunc eget interdum nisl, rhoncus fermentum diam. Nam ac tempor justo. Proin ac euismod dui, ut venenatis velit. Phasellus varius auctor maximus. Phasellus sed elit tincidunt, molestie lorem ac, semper erat. Pellentesque eu dui id lectus tincidunt suscipit. Ut quis auctor risus. Aliquam justo arcu, condimentum in imperdiet vel, cursus id sapien. Nulla dapibus non orci vitae ornare. Sed eu elit finibus tellus volutpat rutrum. Suspendisse quis vestibulum augue, blandit tincidunt erat. Fusce pulvinar magna ex, ac commodo ante convallis eget. Etiam venenatis nisi at nisl gravida sodales vel sed orci.
+
+Mea Lenora
+Ut pharetra dolor et ante pharetra, at blandit nunc tristique. Sed eu enim nec purus pellentesque blandit. Donec aliquam arcu eu mi auctor accumsan. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean vel mi in justo blandit lacinia eget nec purus. Maecenas placerat finibus dignissim. Ut tristique convallis diam vel consectetur. Proin pretium pulvinar facilisis. Nulla eget lacinia ex, ac fermentum nibh. Etiam mattis elit quis lectus fringilla auctor. Phasellus imperdiet, dui et lobortis malesuada, mauris diam finibus nulla, in elementum mauris tellus vel risus. Aliquam porttitor enim eros, vel suscipit nulla bibendum tincidunt.
+
+Saalian
+Fusce vitae fringilla neque. Aenean in sem elementum, semper dolor non, interdum eros. Sed lacinia nunc tellus, ac iaculis enim sagittis at. Integer sodales diam et lorem elementum accumsan. Fusce sit amet metus non velit consequat semper. Donec fermentum urna urna. In a tortor nisl. Mauris sodales dignissim massa, eget tristique urna rhoncus et.
+
+Thylelthemar
+Suspendisse aliquam molestie diam non aliquam. Nunc ultrices, velit non eleifend pretium, ipsum eros dictum augue, non lacinia ante magna sed eros. Integer eu lectus id nisi vulputate consequat. Proin in nibh est. Quisque ac neque scelerisque, iaculis sem nec, viverra est. Aenean nec finibus urna. Suspendisse potenti. Curabitur sodales risus sit amet finibus iaculis. Duis at lorem quis lacus iaculis volutpat sed vitae elit. Aenean pharetra ornare dui, eget consequat sapien feugiat id. Aenean accumsan felis nisl. Nam feugiat nulla ut lacus pretium, quis tincidunt nisi lacinia. Duis porttitor in sapien ut sollicitudin. Aliquam rutrum quam ac tortor laoreet sagittis et vel odio. Fusce sed mauris vitae urna venenatis gravida.
+
+Nelva Anore
+Nunc in mattis purus. Aliquam eros nisi, lobortis pharetra ante a, tristique pretium felis. Mauris convallis, libero vel sodales commodo, ligula libero dignissim est, convallis ultricies enim metus non neque. Etiam quis ipsum sodales, pellentesque velit vel, bibendum justo. Nulla facilisi. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Maecenas tristique venenatis massa quis congue. Fusce malesuada nunc sed efficitur porttitor. Donec ultrices facilisis lorem posuere porttitor. Integer maximus pellentesque orci, id commodo orci. Etiam nulla ex, ultrices eget cursus eu, consectetur quis lacus. Nam id nulla elit.
+
+Lylse Elunore
+Aliquam erat volutpat. Quisque consequat felis ac nulla interdum, sed viverra ante facilisis. Praesent consequat neque lectus, vel pellentesque purus vulputate id. Integer pulvinar risus sit amet suscipit scelerisque. Sed gravida, nulla in imperdiet aliquam, arcu nulla iaculis justo, quis pellentesque enim est nec ipsum. Aliquam erat volutpat. Proin sit amet urna consequat, varius libero at, interdum arcu. Nullam id tortor ligula. In elementum hendrerit mi sed blandit. Nulla ut malesuada lacus, interdum quam. Integer vitae ligula porta, pharetra orci convallis, accumsan felis. Vivamus in laoreet erat. Sed sapien sem, suscipit nec condimentum vel, rhoncus a orci.
+
+Sylnhona
+Praesent sodales sit amet velit ac vulputate. Nunc imperdiet dapibus porttitor. Mauris dictum nulla ligula, sit amet pretium enim mollis rutrum. Donec et pretium nisl. Etiam porttitor pellentesque lacus ut posuere. Sed consectetur mi dolor, sed ornare sem egestas ac. Proin urna massa, molestie id purus sit amet, aliquet vehicula dolor. Vivamus convallis consectetur diam vitae euismod.

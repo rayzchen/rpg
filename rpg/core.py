@@ -4,19 +4,19 @@ import sys
 import os
 import pickle
 import math
-# import inspect
-# import re
 import datetime
-import turtle
-from utils import *
+# import turtle
+
+from .utils import *
+from . import loader
+from .values import *
 
 class Game:
-
-    available_commands = CONSTS["available_commands"]
-    help_commands = CONSTS["help_commands"]
-
     def __init__(self):
         self.started = False
+        loader.load_data()
+        self.available_commands = CONSTS["available_commands"]
+        self.help_commands = CONSTS["help_commands"]
 
     def setup_player(self):
         while not (name := input_slow("Please enter your name: ")):
@@ -51,8 +51,7 @@ class Game:
         self.player.town = self.floors[0].towns[0]
 
     def introduction(self):
-        with open(os.path.join("data", "intro.txt"), "r") as f:
-            lines = f.read().rstrip().splitlines()
+        lines = CONSTS["intro"]
         assert len(lines) == 3
 
         direction = random.randint(0, 7)
@@ -115,13 +114,14 @@ class Game:
         if name == "":
             print_slow("Cancelled saving.")
             return
-        if os.path.isfile(os.path.join("save", "save_" + name + ".rpg")):
+        directory = os.path.dirname(os.path.abspath(__file__))
+        if os.path.isfile(os.path.join(directory, "save", "save_" + name + ".rpg")):
             if input_slow("Do you want to overwrite the save file for the save name " +
                           name + "? (y/n) ").lower() != "y":
                 return
-        if not os.path.isdir("save"):
-            os.mkdir("save")
-        with open(os.path.join("save", "save_" + name + ".rpg"), "wb+") as f:
+        if not os.path.isdir(os.path.join(directory, "save")):
+            os.mkdir(os.path.join(directory, "save"))
+        with open(os.path.join(directory, "save", "save_" + name + ".rpg"), "wb+") as f:
             self.play_time += datetime.datetime.now() - self.opening_time
             pickle.dump(self, f)
             print_slow("Saved successfully!")
@@ -329,7 +329,7 @@ class Game:
             print_slow("Reached", choice.get_other(self.player.town).name + ".")
             self.player.town = choice.get_other(self.player.town)
     
-    def hunting(self):
+    def roam(self):
         print_slow("You go to the edge of the town, and start roaming around for a monster to fight.")
         while True:
             print_slow("Roaming around...")
@@ -351,56 +351,6 @@ class Game:
             self.introduction()
             self.started = True
         mainloop(self, "Menu")
-        # while True:
-        #     try:
-        #         command = re.subn(
-        #             " +", input_slow("Menu> ").lstrip().rstrip().lower(), " ")[0]
-        #         cmd_args = command.split(" ")
-        #     except KeyboardInterrupt:
-        #         print()
-        #         break
-        #     except EOFError:
-        #         break
-        #     if not len(cmd_args[0]) or not cmd_args[0]:
-        #         print()
-        #         continue
-        #     if cmd_args[0] == "exit":
-        #         break
-        #     if cmd_args[0] in self.available_commands:
-        #         func = getattr(self, cmd_args[0])
-        #         if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
-        #             if not func(*cmd_args[1:]) == -1:
-        #                 print()
-        #                 continue
-        #     print_slow("\"" + command + "\"", "is not a valid command!\n")
-
-class Experience:
-    def __init__(self):
-        self.exp = 0
-        self.total_exp = 0
-        self.level = 0
-
-    def add(self, amount):
-        self.exp += amount
-        self.total_exp += amount
-        if self.exp > self.level * 5 + 20:
-            while self.exp > self.level * 5 + 20:
-                self.exp -= self.level * 5 + 20
-                self.level += 1
-            return True
-        return False
-
-    def sub(self, amount):
-        self.exp -= amount
-        self.total_exp -= amount
-        if self.exp < 0:
-            self.level -= 1
-            self.exp += self.level * 5 + 20
-
-    def __repr__(self):
-        return format(self.total_exp, ",") + " (Level " + format(self.level, ",") + \
-            " + " + format(self.exp, ",") + ")"
-    __str__ = __repr__
 
 class LifeForm:
     def __init__(self, name, health, max_health, attack, defense):
@@ -458,67 +408,6 @@ class Player(LifeForm):
         print_slow("Defense points:", self.total_defense)
         print_slow("Money:", format(self.money, ","), CONSTS["currency"] + "s")
 
-class Equipment:
-    equippable = ["sword", "shield", "cloak", "helmet", "shoes"]
-    def __init__(self):
-        self.sword = None
-        self.shield = None
-        self.cloak = None
-        self.helmet = None
-        self.shoes = None
-    
-    def __list__(self):
-        return [getattr(self, item) for item in self.equippable]
-    
-    def __iter__(self):
-        return iter(getattr(self, item) for item in self.equippable)
-
-class Gift:
-    def __init__(self, from_who, item_name, item, amount, args=[]):
-        self.from_who = from_who
-        self.item_name = item_name
-        self.item = item
-        self.amount = amount
-        self.args = args
-        self.player = None
-
-    def give(self, player):
-        print_slow("\nReceived", self.item_name, "from", self.from_who + "\n")
-        player.gifts.append(self)
-        self.player = player
-
-    def claim(self):
-        if self.player is not None:
-            self.player.items.extend([self.item(*self.args)
-                                      for i in range(self.amount)])
-            self.player.gifts.remove(self)
-            print_slow("Claimed", self.item_name, "from", self.from_who)
-        else:
-            raise Exception("Cannot claim gift before giving it to someone")
-
-class Item:
-    def __init__(self, name, stats={}):
-        self.name = name
-        self.level = 0
-        self.stats = stats
-
-    def __repr__(self):
-        return self.name + " +" + str(self.level)
-    __str__ = __repr__
-
-class Money(Gift):
-    def __init__(self, from_who, amount):
-        super(Money, self).__init__(from_who, format(
-            amount, ",") + " " + CONSTS["currency"] + "s", None, amount)
-
-    def claim(self):
-        if self.player is not None:
-            self.player.money += self.amount
-            self.player.gifts.remove(self)
-            print_slow("Claimed", self.item_name, "from", self.from_who)
-        else:
-            raise Exception("Cannot claim gift before giving it to someone")
-
 class Shop:
 
     available_commands = ["items", "info", "buy"]
@@ -540,28 +429,6 @@ class Shop:
     def mainloop(self, player):
         self.player = player
         mainloop(self, "Shop")
-        # while True:
-        #     try:
-        #         command = re.subn(
-        #             " +", input_slow("Shop> ").lstrip().rstrip().lower(), " ")[0]
-        #         cmd_args = command.split(" ")
-        #     except KeyboardInterrupt:
-        #         print()
-        #         break
-        #     except EOFError:
-        #         break
-        #     if not len(cmd_args[0]) or not cmd_args[0]:
-        #         print()
-        #         continue
-        #     if cmd_args[0] == "exit":
-        #         break
-        #     if cmd_args[0] in self.available_commands:
-        #         func = getattr(self, cmd_args[0])
-        #         if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
-        #             if not func(*cmd_args[1:]) == -1:
-        #                 print()
-        #                 continue
-        #     print_slow("\"" + command + "\"", "is not a valid command!\n")
         self.player = None
 
     def stats(self, item=None):
@@ -675,27 +542,22 @@ class Floor:
         route1.town2.linked_to[self.towns[0]] = route1
         self.routes = {n - 1: route1}
         n += 1
-        town_list1 = list(range(len(self.towns)))
-        town_list2 = list(range(len(self.towns)))
-        random.shuffle(town_list1)
-        random.shuffle(town_list2)
-        for town1_i in town_list1:
-            town1 = self.towns[town1_i]
-            if len(town1.linked_to) == town1.max_connections:
-                continue
-            for town2_i in town_list2:
-                town2 = self.towns[town2_i]
-                if town1_i == town2_i or len(town2.linked_to) == town2.max_connections:
-                    continue
-                if town2 not in town1.linked_to:
-                    route = Route(town1, town2, n)
-                    self.routes[n] = route
-                    town1.linked_to[town2] = route
-                    town2.linked_to[town1] = route
-                    n += 1
-                if len(town1.linked_to) == town1.max_connections:
-                    break
-        
+
+        not_fully_connected = list(range(1, len(self.towns)))
+        while len(not_fully_connected) >= 2:
+            temp = not_fully_connected.copy()
+            random.shuffle(temp)
+            a, b = temp.pop(), temp.pop()
+            route = Route(self.towns[a], self.towns[b], n)
+            self.routes[n] = route
+            self.towns[a].linked_to[self.towns[b]] = route
+            self.towns[b].linked_to[self.towns[a]] = route
+            n += 1
+            if len(self.towns[a].linked_to) == self.towns[a].max_connections:
+                not_fully_connected.remove(a)
+            if len(self.towns[b].linked_to) == self.towns[b].max_connections:
+                not_fully_connected.remove(b)
+
         double_route = list(self.routes.values())[random.randrange(1, len(self.routes))]
         route1 = Route(double_route.town1, None, double_route.num)
         route2 = Route(route1, double_route.town2, double_route.num + 1)
@@ -712,10 +574,10 @@ class Floor:
             self.routes[n] = replacement
             replacement.num = n
         
-        # for town in self.towns:
-        #     print_slow(town.max_connections)
-        #     for town2, route in town.linked_to.items():
-        #         print_slow(route, "(" + town.name, "to", town2.name + ")")
+        for town in self.towns:
+            print_slow(town.max_connections)
+            for town2, route in town.linked_to.items():
+                print_slow(route, "(" + town.name, "to", town2.name + ")")
 
         # points = [(-50, -25), (-100, 50), (50, 100), (100, -50), (-50, -100)]
         # turtle.hideturtle()
@@ -761,26 +623,3 @@ class Route:
             return self.town1
         else:
             raise ValueError(other.name + " is not part of this Route!")
-
-def main():
-    if sys.stdout.isatty():
-        clear()
-    if os.path.isdir("save") and len(os.listdir("save")):
-        while True:
-            save_name = input_slow("Enter save name to be loaded: ")
-            if save_name != "":
-                if os.path.isfile(os.path.join("save", "save_" + save_name + ".rpg")):
-                    with open(os.path.join("save", "save_" + save_name + ".rpg"), "rb") as f:
-                        save = pickle.load(f)
-                    save.mainloop()
-                    return
-                print_slow("There is no save file named " + save_name + "!")
-            else:
-                break
-    print_slow("Creating new world...\n")
-    game = Game()
-    game.mainloop()
-
-if __name__ == "__main__":
-    main()
-    clear()
