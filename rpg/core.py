@@ -34,18 +34,15 @@ class Game:
 
     def load_town_data(self):
         towns = CONSTS["towns"]
-        self.starting_town = towns.pop(0)
-        self.starting_town = {
-            "name": self.starting_town[0], "desc": self.starting_town[1:]}
+        starting_town = towns.pop(0)
         random.shuffle(towns)
+        towns.insert(0, starting_town)
         self.town_names = list(map(lambda x: x[0], towns))
         self.town_descs = list(map(lambda x: x[1:], towns))
 
     def setup_floor1(self):
-        self.floors = [Floor(1,
-                [self.starting_town["name"]] + self.town_names[:4],
-                [self.starting_town["desc"]] + self.town_descs[:4])]
-        del self.town_names[:4], self.town_descs[:4]
+        self.floors = [Floor(1, self.town_names[:10], self.town_descs[:10])]
+        # del self.town_names[:5], self.town_descs[:5]
 
         self.player.floor = self.floors[0]
         self.player.town = self.floors[0].towns[0]
@@ -114,14 +111,15 @@ class Game:
         if name == "":
             print_slow("Cancelled saving.")
             return
-        directory = os.path.dirname(os.path.abspath(__file__))
-        if os.path.isfile(os.path.join(directory, "save", "save_" + name + ".rpg")):
+        # save_folder = os.path.expandvars(os.path.join("%localappdata%", "RPG", "saves"))
+        directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save")
+        if os.path.isfile(os.path.join(directory, "save_" + name + ".rpg")):
             if input_slow("Do you want to overwrite the save file for the save name " +
                           name + "? (y/n) ").lower() != "y":
                 return
         if not os.path.isdir(os.path.join(directory, "save")):
-            os.mkdir(os.path.join(directory, "save"))
-        with open(os.path.join(directory, "save", "save_" + name + ".rpg"), "wb+") as f:
+            os.mkdir(directory)
+        with open(os.path.join(directory, "save_" + name + ".rpg"), "wb+") as f:
             self.play_time += datetime.datetime.now() - self.opening_time
             pickle.dump(self, f)
             print_slow("Saved successfully!")
@@ -418,13 +416,10 @@ class Shop:
     def __init__(self):
         items = [0, 1]
         self.selling = []
-        for item in items:
-            name = CONSTS["items"][item]["name"]
-            price = CONSTS["items"][item]["price"]
-            stats = CONSTS["items"][item].copy()
-            stats.pop("name")
-            stats.pop("price")
-            self.selling.append([Item(name, stats), price, False])
+        for item_num in items:
+            item = Item.from_dict(CONSTS["items"][item_num])
+            price = CONSTS["items"][item_num]["price"]
+            self.selling.append([item, price, False])
 
     def mainloop(self, player):
         self.player = player
@@ -532,74 +527,111 @@ class Floor:
             random.uniform(0.9 - 0.05 * self.num, 0.95 - 0.05 * self.num)
         ) for name, desc in zip(town_names, town_descs)]
 
+        self.towns[0].max_connections = 1
         no_of_3_conenctions = round(1 / 3 * len(self.towns))
         for town in self.towns[-no_of_3_conenctions:]:
             town.max_connections = 3
+        a, b = self.towns.pop(), self.towns.pop(0)
+        random.shuffle(self.towns)
+        self.towns.insert(0, b)
         
         n = 90 + self.num * 10 + 1
-        route1 = Route(self.towns[0], random.choice(self.towns[1:]), n)
-        self.towns[0].linked_to[route1.town2] = route1
-        route1.town2.linked_to[self.towns[0]] = route1
-        self.routes = {n - 1: route1}
+        self.routes = {}
+        route = Route(self.towns[0], self.towns[-1], n)
+        self.routes[n] = route
+        route.town1.linked_to[route.town2] = route
+        route.town2.linked_to[route.town1] = route
+        self.towns.insert(random.randint(1, len(self.towns) - 1), a)
         n += 1
 
-        not_fully_connected = list(range(1, len(self.towns)))
-        while len(not_fully_connected) >= 2:
-            temp = not_fully_connected.copy()
-            random.shuffle(temp)
-            a, b = temp.pop(), temp.pop()
-            route = Route(self.towns[a], self.towns[b], n)
+        first_town = self.towns.pop(0)
+        town_num = list(range(len(self.towns)))
+        print(self.towns[town_num[-1]].name)
+        while len(town_num) > 1:
+            route = Route(self.towns[town_num.pop()], self.towns[town_num[-1]], n)
             self.routes[n] = route
-            self.towns[a].linked_to[self.towns[b]] = route
-            self.towns[b].linked_to[self.towns[a]] = route
+            route.town1.linked_to[route.town2] = route
+            route.town2.linked_to[route.town1] = route
             n += 1
-            if len(self.towns[a].linked_to) == self.towns[a].max_connections:
-                not_fully_connected.remove(a)
-            if len(self.towns[b].linked_to) == self.towns[b].max_connections:
-                not_fully_connected.remove(b)
-
-        double_route = list(self.routes.values())[random.randrange(1, len(self.routes))]
-        route1 = Route(double_route.town1, None, double_route.num)
-        route2 = Route(route1, double_route.town2, double_route.num + 1)
-        route1.town2 = route2
-        double_route.town1.linked_to[double_route.town2] = route1
-        double_route.town2.linked_to[double_route.town1] = route2
-
-        self.routes[double_route.num] = route1
-        if double_route.num + 1 not in self.routes:
-            self.routes[double_route.num + 1] = route2
-        else:
-            replacement = self.routes[double_route.num + 1]
-            self.routes[double_route.num + 1] = route2
-            self.routes[n] = replacement
-            replacement.num = n
         
-        for town in self.towns:
-            print_slow(town.max_connections)
-            for town2, route in town.linked_to.items():
-                print_slow(route, "(" + town.name, "to", town2.name + ")")
-
-        # points = [(-50, -25), (-100, 50), (50, 100), (100, -50), (-50, -100)]
-        # turtle.hideturtle()
-        # turtle.speed(0)
-        # turtle.penup()
-        # for point in points:
-        #     turtle.goto(*point)
-        #     turtle.dot(10)
+        not_fully_connected = [a for a in range(1, len(self.towns) - 1) if (
+            self.towns[a].max_connections == 3)] + [0]
+        random.shuffle(not_fully_connected)
         
-        # for route in self.routes.values():
-        #     turtle.penup()
-        #     turtle.goto(*points[self.towns.index(route.town1)])
-        #     turtle.pendown()
-        #     turtle.goto(*points[self.towns.index(route.town2)])
+        while len(not_fully_connected) >= 2:
+            route = Route(self.towns[not_fully_connected.pop()],
+                          self.towns[not_fully_connected.pop()], n)
+            if route.town2 in route.town1.linked_to:
+                continue
+            self.routes[n] = route
+            route.town1.linked_to[route.town2] = route
+            route.town2.linked_to[route.town1] = route
+            n += 1
+        
+        random.shuffle(self.towns)
+        self.towns.insert(0, first_town)
+
+        # double_routes = list(self.routes.keys())[1:]
+        # random.shuffle(double_routes)
+        # double_routes = double_routes[-len(self.towns) // 5:]
+        # for i in range(len(double_routes)):
+        #     double_route = self.routes[double_routes[i]]
+        #     route1 = Route(double_route.town1, None, double_route.num)
+        #     route2 = Route(route1, double_route.town2, double_route.num + 1)
+        #     route1.town2 = route2
+        #     double_route.town1.linked_to[double_route.town2] = route1
+        #     double_route.town2.linked_to[double_route.town1] = route2
+
+        #     self.routes[double_route.num] = route1
+        #     double_routes[i] = route2
+        
+        # for route2 in double_routes:
+        #     if route2.num + 1 not in self.routes:
+        #         self.routes[route2.num + 1] = route2
+        #     else:
+        #         replacement = self.routes[route2.num]
+        #         self.routes[route2.num] = route2
+        #         self.routes[n] = replacement
+        #         replacement.num = n
+        
+        # for town in self.towns:
+        #     print_slow(town.max_connections)
+        #     for town2, route in town.linked_to.items():
+        #         print_slow(route, "(" + route.town1.name, "to", route.town2.name + ")")
+
+        import turtle
+        points = [(0, 0)]
+        for i in range(len(self.towns) - 1):
+            s = math.sin(2 * math.pi / (len(self.towns) - 1) * i)
+            c = math.cos(2 * math.pi / (len(self.towns) - 1) * i)
+            points.append((-s * 200, c * 200))
+        turtle.clear()
+        turtle.speed(1)
+        turtle.penup()
+        for i, point in enumerate(points):
+            turtle.goto(*point[:2])
+            turtle.dot(10)
+            turtle.goto(point[0] * 1.1 - 5, point[1] * 1.1 - 10)
+            turtle.write(str(self.towns[i].max_connections))
+        
+        for route in self.routes.values():
+            if isinstance(route.town1, Route):
+                continue
+            
+            turtle.penup()
+            turtle.goto(*points[self.towns.index(route.town1)])
+            turtle.pendown()
+            if isinstance(route.town2, Route):
+                turtle.goto(*points[self.towns.index(route.town2.town2)])
+            else:
+                turtle.goto(*points[self.towns.index(route.town2)])
+        turtle.penup()
+        turtle.goto(0, 0)
 
 class Town:
     def __init__(self, name, desc, spawn_rate):
         self.linked_to = {}
-        if name == "Starting Town":
-            self.max_connections = 1
-        else:
-            self.max_connections = 2
+        self.max_connections = 2
         self.name, self.desc = name, desc
         self.spawn_rate = spawn_rate
         self.shop = Shop()

@@ -78,6 +78,13 @@ class Item:
         return self.name + " +" + str(self.level)
     __str__ = __repr__
 
+    @staticmethod
+    def from_dict(d):
+        stats = d.copy()
+        stats.pop("name")
+        stats.pop("price")
+        return Item(d["name"], stats)
+
 class Money(Gift):
     def __init__(self, from_who, amount):
         super(Money, self).__init__(from_who, format(
