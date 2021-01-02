@@ -185,7 +185,7 @@ class Game:
 
     def shop(self):
         print()
-        print_slow("You have", self.player.money, CONSTS["currency"] + "s.\n")
+        print_slow("You have", format(self.player.money, ","), CONSTS["currency"] + "s.\n")
         self.player.town.shop.mainloop(self.player)
 
     def items(self, stats_or_page="1", num=""):
@@ -199,7 +199,7 @@ class Game:
             item = self.player.items[num_int]
             print_slow("Stats on item", num, "(" + item.name + "):\n")
             for stat_name, stat_value in item.stats.items():
-                if stat_name == "type":
+                if stat_name in ["type", "number"]:
                     continue
                 if isinstance(stat_value, int):
                     print_slow(Shop.stat_keys[stat_name] +
@@ -214,15 +214,15 @@ class Game:
                     "You have no items. You can obtain items from gifts or from Shops in towns.")
                 return
             page_num = int(stats_or_page) - 1
-            if page_num * 5 > len(self.player.items):
+            if page_num * 10 >= len(self.player.items):
                 print_slow("There is no page", stats_or_page + "!")
                 return
             print_slow("Your Items:\n")
-            i = page_num * 5
+            i = page_num * 10
             for item in self.player.items[i:]:
                 print_slow("Item", str(i + 1) + ":", item.name)
                 i += 1
-                if i >= (page_num + 1) * 5:
+                if i >= (page_num + 1) * 10:
                     break
             print_slow("\nPage", stats_or_page, "of",
                        math.ceil(len(self.player.items) / 10))
@@ -438,10 +438,11 @@ class Shop:
     available_commands = ["items", "info", "buy"]
     stat_keys = {
         "attack": "Attack Boost", "defense": "Defense Boost", "desc": "Description", "effect": "Effect",
+        "number": "Left in stock",
     }
 
     def __init__(self):
-        items = [0, 1]
+        items = [0, 1, 2]
         self.selling = []
         for item_num in items:
             item = Item.from_dict(CONSTS["items"][item_num])
@@ -485,11 +486,18 @@ class Shop:
         print_slow("Items in the shop:\n")
         i = page_num * 5
         for item, price, sold in self.selling[i:]:
-            if sold:
+            if "number" in item.stats:
+                if sold:
+                    print_slow("Item", str(i + 1) + ":", item.name, "(OUT OF STOCK)")
+                else:
+                    print_slow("Item", str(i + 1) + ":", item.name,
+                               "\tPrice:", price, CONSTS["currency"] + "s", "(" + 
+                               str(item.stats["number"]), "left in stock)")
+            elif sold:
                 print_slow("Item", str(i + 1) + ":", item.name, "(SOLD)")
             else:
                 print_slow("Item", str(i + 1) + ":", item.name,
-                           "\tPrice:", price, CONSTS["currency"] + "s")
+                        "\tPrice:", price, CONSTS["currency"] + "s")
             i += 1
             if i >= (page_num + 1) * 5:
                 break
@@ -529,12 +537,39 @@ class Shop:
             print_slow("You have insufficient funds to buy a" +
                        ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name + "!")
         else:
+            if "number" in item[0].stats:
+                if item[0].stats["number"] == 0:
+                    print_slow("Item", item_index, "(" + item[0].name + ") has ran out of stock!")
+                    return
+                while (number := input_slow("How many do you want to buy? ")) != "":
+                    if number.isdecimal():
+                        num_int = int(number)
+                        if num_int > item[0].stats["number"]:
+                            print_slow("There are only", item[0].stats["number"], "left in stock!")
+                            continue
+                        break
+                    else:
+                        print_slow("\"" + number + "\" is not a number!")
+                answer = input_slow("Are you sure you want to buy " + number + "x " + item[0].name +
+                                    ("s" if num_int > 1 else "") + " for " + str(num_int * item[1]) +
+                                    " " + CONSTS["currency"] + "s? (y/n) ").lower()
+                if answer == "y":
+                    self.player.money -= num_int * item[1]
+                    self.player.items += [item[0].copy() for i in range(num_int)]
+                    item[0].stats["number"] -= num_int
+                    if item[0].stats["number"] == 0:
+                        item[2] = True
+                    print_slow("Item", item_index, "(" + item[0].name + ") has now sold out.")
+                    print_slow("You have bought " + number + "x of item " + item_index + "(" +
+                            item[0].name + ")" + ("s" if num_int > 1 else "") + " for " +
+                            str(num_int * item[1]) + " " + CONSTS["currency"] + "s.")
+                return
             answer = input_slow("Are you sure you want to buy a" +
                                 ("n" if item[0].name[0].lower() in "aeiou" else "") + " " + item[0].name +
                                 " for " + str(item[1]) + " " + CONSTS["currency"] + "s? (y/n) ").lower()
             if answer == "y":
                 self.player.money -= item[1]
-                self.player.items.append(item[0])
+                self.player.items.append(item[0].copy())
                 item[2] = True
                 print_slow("You have bought item", item_index,
                            "(" + item[0].name + ") for", item[1], CONSTS["currency"] + "s.")
@@ -574,7 +609,6 @@ class Floor:
 
         first_town = self.towns.pop(0)
         town_num = list(range(len(self.towns)))
-        print(self.towns[town_num[-1]].name)
         while len(town_num) > 1:
             route = Route(self.towns[town_num.pop()],
                           self.towns[town_num[-1]], n)
@@ -624,41 +658,41 @@ class Floor:
 
         self.routes = {route.num: route for route in self.routes}
 
-        for town in self.towns:
-            print_slow(town.max_connections)
-            for town2, route in town.linked_to.items():
-                print_slow(route, "(" + town.name, "to",
-                           route.get_other(town).name + ")")
-        print()
+        # for town in self.towns:
+        #     print_slow(town.max_connections)
+        #     for town2, route in town.linked_to.items():
+        #         print_slow(route, "(" + town.name, "to",
+        #                    route.get_other(town).name + ")")
+        # print()
 
-        import turtle
-        points = [(0, 0)]
-        for i in range(len(self.towns) - 1):
-            s = math.sin(2 * math.pi / (len(self.towns) - 1) * i)
-            c = math.cos(2 * math.pi / (len(self.towns) - 1) * i)
-            points.append((-s * 200, c * 200))
-        turtle.clear()
-        turtle.speed(1.5)
-        turtle.penup()
-        for i, point in enumerate(points):
-            turtle.goto(*point[:2])
-            turtle.dot(10)
-            turtle.goto(point[0] * 1.1 - 5, point[1] * 1.1 - 10)
-            turtle.write(str(self.towns[i].max_connections))
+        # import turtle
+        # points = [(0, 0)]
+        # for i in range(len(self.towns) - 1):
+        #     s = math.sin(2 * math.pi / (len(self.towns) - 1) * i)
+        #     c = math.cos(2 * math.pi / (len(self.towns) - 1) * i)
+        #     points.append((-s * 200, c * 200))
+        # turtle.clear()
+        # turtle.speed(1.5)
+        # turtle.penup()
+        # for i, point in enumerate(points):
+        #     turtle.goto(*point[:2])
+        #     turtle.dot(10)
+        #     turtle.goto(point[0] * 1.1 - 5, point[1] * 1.1 - 10)
+        #     turtle.write(str(self.towns[i].max_connections))
 
-        for route in self.routes.values():
-            if isinstance(route.town1, Route):
-                continue
+        # for route in self.routes.values():
+        #     if isinstance(route.town1, Route):
+        #         continue
 
-            turtle.penup()
-            turtle.goto(*points[self.towns.index(route.town1)])
-            turtle.pendown()
-            if isinstance(route.town2, Route):
-                turtle.goto(*points[self.towns.index(route.town2.town2)])
-            else:
-                turtle.goto(*points[self.towns.index(route.town2)])
-        turtle.penup()
-        turtle.goto(0, 0)
+        #     turtle.penup()
+        #     turtle.goto(*points[self.towns.index(route.town1)])
+        #     turtle.pendown()
+        #     if isinstance(route.town2, Route):
+        #         turtle.goto(*points[self.towns.index(route.town2.town2)])
+        #     else:
+        #         turtle.goto(*points[self.towns.index(route.town2)])
+        # turtle.penup()
+        # turtle.goto(0, 0)
 
 class Town:
     def __init__(self, name, desc, spawn_rate):

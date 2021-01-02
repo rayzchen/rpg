@@ -11,3 +11,8 @@ attack: 0
 defense: 4
 type: shield
 desc: The ideal shield to deflect beasts and monsters.
+
+name: Teleport Crystal
+price: 2000
+desc: Handy when you're lost or in danger.
+number: 20

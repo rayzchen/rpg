@@ -84,6 +84,9 @@ class Item:
         stats.pop("name")
         stats.pop("price")
         return Item(d["name"], stats)
+    
+    def copy(self):
+        return Item(self.name, self.stats.copy())
 
 class Money(Gift):
     def __init__(self, from_who, amount):
