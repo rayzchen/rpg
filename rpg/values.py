@@ -38,10 +38,10 @@ class Equipment:
         self.cloak = None
         self.helmet = None
         self.shoes = None
-    
+
     def __list__(self):
         return [getattr(self, item) for item in self.equippable]
-    
+
     def __iter__(self):
         return iter(getattr(self, item) for item in self.equippable)
 

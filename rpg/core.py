@@ -94,7 +94,8 @@ class Game:
         elif item == "attack":
             print_slow("Attack damage:", format(self.player.total_attack, ","))
         elif item == "defense":
-            print_slow("Defense points:", format(self.player.total_defense, ","))
+            print_slow("Defense points:", format(
+                self.player.total_defense, ","))
         elif item == "money":
             print_slow("Money:", format(
                 self.player.money, ",") + " " + CONSTS["currency"] + "s")
@@ -112,7 +113,8 @@ class Game:
             print_slow("Cancelled saving.")
             return
         # save_folder = os.path.expandvars(os.path.join("%localappdata%", "RPG", "saves"))
-        directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save")
+        directory = os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), "save")
         if os.path.isfile(os.path.join(directory, "save_" + name + ".rpg")):
             if input_slow("Do you want to overwrite the save file for the save name " +
                           name + "? (y/n) ").lower() != "y":
@@ -200,7 +202,8 @@ class Game:
                 if stat_name == "type":
                     continue
                 if isinstance(stat_value, int):
-                    print_slow(Shop.stat_keys[stat_name] + ":", format(stat_value, ","))
+                    print_slow(Shop.stat_keys[stat_name] +
+                               ":", format(stat_value, ","))
                 else:
                     print_slow(Shop.stat_keys[stat_name] + ":", stat_value)
         else:
@@ -259,7 +262,8 @@ class Game:
             if item_num is None:
                 return -1
             if item_num not in Equipment.equippable:
-                print_slow("There is no type of equipment called", item_num + "!")
+                print_slow("There is no type of equipment called",
+                           item_num + "!")
                 return
             item = getattr(self.player.equipment, item_num)
             if item is None:
@@ -276,29 +280,32 @@ class Game:
             if input_slow("Are you sure you want to sleep? This costs 5 " + CONSTS["currency"] + "s. (y/n) ") == "y":
                 print_slow("Sleeping...")
                 time.sleep(1)
-                self.time_offset = (datetime.datetime.now() - 
-                self.opening_time) % datetime.timedelta(seconds=300)
+                self.time_offset = (datetime.datetime.now() -
+                                    self.opening_time) % datetime.timedelta(seconds=300)
                 print_slow("Time offset is now", strfdelta(
                     self.time_offset, "{D}d, {H}:{M:02}:{S:02}"))
         else:
             print_slow("You are OTM - off the map!")
-    
+
     def travel(self):
-        print_slow("Routes connected to this town (" + self.player.town.name + "):\n")
+        print_slow("Routes connected to this town (" +
+                   self.player.town.name + "):\n")
         for town2, route in self.player.town.linked_to.items():
-            print_slow("Route", route.num, "(Connects to", town2.name + ")", end="")
+            print_slow("Route", route.num,
+                       "(Connects to", town2.name + ")", end="")
             if town2.linked_to[self.player.town] is not route:
-                print_slow(" Note: Double route via Route", town2.linked_to[self.player.town].num)
+                print_slow(" Note: Double route via Route",
+                           town2.linked_to[self.player.town].num)
             else:
                 print()
         print()
-        
+
         towns = list(self.player.town.linked_to.keys())
         routes = list(self.player.town.linked_to.values())
         route_numbers = list(map(lambda x: str(x.num), routes))
         if len(towns) == 1:
             if input_slow("Would you like to travel along " + routes[0].name + " to " +
-                    towns[0].name + "? (y/n) ") == "y":
+                          towns[0].name + "? (y/n) ") == "y":
                 choice = routes[0]
             else:
                 return
@@ -309,7 +316,7 @@ class Game:
                 print_slow("That is not a valid Route!")
                 print_slow("Available routes:", ", ".join(route_numbers))
             choice = routes[route_numbers.index(answer)]
-        
+
         limit = self.player.furthest_route + 1
         if choice.num > limit:
             if not (isinstance(choice.get_other(self.player.town), Route) and
@@ -317,20 +324,21 @@ class Game:
                 print_slow("You cannot travel on this route, because you must reach Route",
                            choice.num - 1, "to unlock this route. Route", choice.num - 1,
                            "can be found connected to",
-                           self.player.floor.routes[choice.num - 1].town1.name, "and",
+                           self.player.floor.routes[choice.num -
+                                                    1].town1.name, "and",
                            self.player.floor.routes[choice.num - 1].town2.name + ".")
                 return
         print_slow("Travelling along", str(choice) + "...")
 
-        time.sleep(1) # Replace with monster fighting
+        time.sleep(1)  # Replace with monster fighting
 
         other_route = choice.get_other(self.player.town)
         if isinstance(choice.get_other(self.player.town), Route):
             print_slow("Reached the center of Double Route", str(choice.num) + "/" +
-                str(other_route.num) + ".")
+                       str(other_route.num) + ".")
             print_slow("Travelling along", str(other_route) + "...")
 
-            time.sleep(1) # Replace with monster fighting
+            time.sleep(1)  # Replace with monster fighting
 
             print_slow("Reached", other_route.get_other(choice).name + ".")
             self.player.furthest_route = max(
@@ -338,16 +346,19 @@ class Game:
             self.player.town = other_route.get_other(choice)
         else:
             print_slow("Reached", other_route.name + ".")
-            self.player.furthest_route = max(self.player.furthest_route, choice.num)
+            self.player.furthest_route = max(
+                self.player.furthest_route, choice.num)
             self.player.town = other_route
-    
+
     def roam(self):
-        print_slow("You go to the edge of the town, and start roaming around for a monster to fight.")
+        print_slow(
+            "You go to the edge of the town, and start roaming around for a monster to fight.")
         while True:
             print_slow("Roaming around...")
             time.sleep(random.random() * 3 + 2)
             if random.random() < self.player.town.spawn_rate:
-                print_slow("A twig snaps, and something emerges out of the shadows.")
+                print_slow(
+                    "A twig snaps, and something emerges out of the shadows.")
                 # Fight
             if input_slow("Do you want to continue roaming around? (y/n) ") != "y":
                 print_slow("You journey back to the town.")
@@ -394,7 +405,7 @@ class Player(LifeForm):
         self.hunger = 50
 
         self.furthest_route = 100
-    
+
     @property
     def total_attack(self):
         total = self.attack
@@ -403,7 +414,7 @@ class Player(LifeForm):
                 continue
             total += item.stats["attack"]
         return total
-    
+
     @property
     def total_defense(self):
         total = self.defense
@@ -455,7 +466,8 @@ class Shop:
         elif item == "attack":
             print_slow("Attack damage:", format(self.player.total_attack, ","))
         elif item == "defense":
-            print_slow("Defense points:", format(self.player.total_defense, ","))
+            print_slow("Defense points:", format(
+                self.player.total_defense, ","))
         elif item == "money":
             print_slow("Money:", format(
                 self.player.money, ",") + " " + CONSTS["currency"] + "s")
@@ -496,7 +508,8 @@ class Shop:
             if stat_name == "type":
                 continue
             if isinstance(stat_value, int):
-                print_slow(self.stat_keys[stat_name] + ":", format(stat_value, ","))
+                print_slow(self.stat_keys[stat_name] +
+                           ":", format(stat_value, ","))
             else:
                 print_slow(self.stat_keys[stat_name] + ":", stat_value)
         print_slow("Price:", self.selling[item_num][1])
@@ -550,7 +563,7 @@ class Floor:
         a, b = self.towns.pop(), self.towns.pop(0)
         random.shuffle(self.towns)
         self.towns.insert(0, b)
-        
+
         n = 90 + self.num * 10 + 1
         route = Route(self.towns[0], self.towns[-1], n)
         route.town1.linked_to[route.town2] = route
@@ -563,16 +576,17 @@ class Floor:
         town_num = list(range(len(self.towns)))
         print(self.towns[town_num[-1]].name)
         while len(town_num) > 1:
-            route = Route(self.towns[town_num.pop()], self.towns[town_num[-1]], n)
+            route = Route(self.towns[town_num.pop()],
+                          self.towns[town_num[-1]], n)
             self.routes.append(route)
             route.town1.linked_to[route.town2] = route
             route.town2.linked_to[route.town1] = route
             n += 1
-        
+
         not_fully_connected = [a for a in range(1, len(self.towns) - 1) if (
             self.towns[a].max_connections == 3)] + [0]
         random.shuffle(not_fully_connected)
-        
+
         while len(not_fully_connected) >= 2:
             route = Route(self.towns[not_fully_connected.pop()],
                           self.towns[not_fully_connected.pop()], n)
@@ -582,7 +596,7 @@ class Floor:
             route.town1.linked_to[route.town2] = route
             route.town2.linked_to[route.town1] = route
             n += 1
-        
+
         random.shuffle(self.towns)
         self.towns.insert(0, first_town)
 
@@ -599,7 +613,7 @@ class Floor:
 
             self.routes[item] = route1
             double_routes[index] = route2
-        
+
         for route2 in double_routes:
             if route2.num < n:
                 for route in self.routes:
@@ -607,13 +621,14 @@ class Floor:
                         route.num += 1
             self.routes.append(route2)
             n += 1
-        
+
         self.routes = {route.num: route for route in self.routes}
-        
+
         for town in self.towns:
             print_slow(town.max_connections)
             for town2, route in town.linked_to.items():
-                print_slow(route, "(" + town.name, "to", route.get_other(town).name + ")")
+                print_slow(route, "(" + town.name, "to",
+                           route.get_other(town).name + ")")
         print()
 
         import turtle
@@ -630,11 +645,11 @@ class Floor:
             turtle.dot(10)
             turtle.goto(point[0] * 1.1 - 5, point[1] * 1.1 - 10)
             turtle.write(str(self.towns[i].max_connections))
-        
+
         for route in self.routes.values():
             if isinstance(route.town1, Route):
                 continue
-            
+
             turtle.penup()
             turtle.goto(*points[self.towns.index(route.town1)])
             turtle.pendown()
@@ -659,17 +674,17 @@ class Town:
 class Route:
     def __init__(self, town1, town2, num):
         self.town1, self.town2, self.num = town1, town2, num
-    
+
     @property
     def name(self):
         return "Route " + str(self.num)
-    
+
     def __str__(self):
         return self.name
-    
+
     def __repr__(self):
         return self.name + " (" + self.town1.name + " to " + self.town2.name + ")"
-    
+
     def get_other(self, other):
         if other is self.town1:
             return self.town2

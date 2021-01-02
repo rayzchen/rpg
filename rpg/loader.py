@@ -29,7 +29,7 @@ directory = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(directory, "data", "help.txt"), "r") as f:
     lines = f.read().rstrip().splitlines()
 CONSTS["help_commands"] = {cmd: line for cmd,
-                            line in zip(CONSTS["available_commands"], lines)}
+                           line in zip(CONSTS["available_commands"], lines)}
 
 with open(os.path.join(directory, "data", "towns.txt"), "r") as f:
     text = f.read().rstrip()

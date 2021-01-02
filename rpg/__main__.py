@@ -6,7 +6,8 @@ from .utils import *
 
 def main():
     # save_folder = os.path.expandvars(os.path.join("%localappdata%", "RPG", "saves"))
-    save_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "save")
+    save_folder = os.path.join(os.path.dirname(
+        os.path.abspath(__file__)), "save")
     if sys.stdout.isatty():
         clear()
     if os.path.isdir(save_folder) and len(os.listdir(save_folder)):
