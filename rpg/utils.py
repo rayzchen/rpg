@@ -30,8 +30,7 @@ def print_slow(*args, sep=" ", end="\n", speed=CONSTS["speed"], multiplier=CONST
         write_slow(item, speed, multiplier)
         if i < len(args) - 1:
             write_slow(sep, speed, multiplier)
-    for char in str(end):
-        write_slow(end, speed, multiplier)
+    write_slow(end, speed, multiplier)
 
 def input_slow(text, speed=CONSTS["speed"], multiplier=CONSTS["multiplier"]):
     write_slow(text, speed, multiplier)

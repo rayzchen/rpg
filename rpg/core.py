@@ -41,8 +41,8 @@ class Game:
         self.town_descs = list(map(lambda x: x[1:], towns))
 
     def setup_floor1(self):
-        self.floors = [Floor(1, self.town_names[:10], self.town_descs[:10])]
-        # del self.town_names[:5], self.town_descs[:5]
+        self.floors = [Floor(1, self.town_names[:5], self.town_descs[:5])]
+        del self.town_names[:5], self.town_descs[:5]
 
         self.player.floor = self.floors[0]
         self.player.town = self.floors[0].towns[0]
@@ -291,6 +291,7 @@ class Game:
                 print_slow(" Note: Double route via Route", town2.linked_to[self.player.town].num)
             else:
                 print()
+        print()
         
         towns = list(self.player.town.linked_to.keys())
         routes = list(self.player.town.linked_to.values())
@@ -308,24 +309,37 @@ class Game:
                 print_slow("That is not a valid Route!")
                 print_slow("Available routes:", ", ".join(route_numbers))
             choice = routes[route_numbers.index(answer)]
-        print_slow("Travelling along", str(choice) + "...")
         
-        print(choice.town1.name, choice.town2.name, self.player.town.name)
+        limit = self.player.furthest_route + 1
+        if choice.num > limit:
+            if not (isinstance(choice.get_other(self.player.town), Route) and
+                    choice.get_other(self.player.town).num == limit):
+                print_slow("You cannot travel on this route, because you must reach Route",
+                           choice.num - 1, "to unlock this route. Route", choice.num - 1,
+                           "can be found connected to",
+                           self.player.floor.routes[choice.num - 1].town1.name, "and",
+                           self.player.floor.routes[choice.num - 1].town2.name + ".")
+                return
+        print_slow("Travelling along", str(choice) + "...")
 
         time.sleep(1) # Replace with monster fighting
 
+        other_route = choice.get_other(self.player.town)
         if isinstance(choice.get_other(self.player.town), Route):
             print_slow("Reached the center of Double Route", str(choice.num) + "/" +
-                str(choice.get_other(self.player.town).num) + ".")
-            print_slow("Travelling along", str(choice.get_other(self.player.town)) + "...")
+                str(other_route.num) + ".")
+            print_slow("Travelling along", str(other_route) + "...")
 
             time.sleep(1) # Replace with monster fighting
 
-            print_slow("Reached", choice.get_other(self.player.town).get_other(choice).name + ".")
-            self.player.town = choice.get_other(self.player.town).get_other(choice)
+            print_slow("Reached", other_route.get_other(choice).name + ".")
+            self.player.furthest_route = max(
+                self.player.furthest_route, choice.num, other_route.num)
+            self.player.town = other_route.get_other(choice)
         else:
-            print_slow("Reached", choice.get_other(self.player.town).name + ".")
-            self.player.town = choice.get_other(self.player.town)
+            print_slow("Reached", other_route.name + ".")
+            self.player.furthest_route = max(self.player.furthest_route, choice.num)
+            self.player.town = other_route
     
     def roam(self):
         print_slow("You go to the edge of the town, and start roaming around for a monster to fight.")
@@ -378,6 +392,8 @@ class Player(LifeForm):
         self.equipment = Equipment()
         self.thirst = 50
         self.hunger = 50
+
+        self.furthest_route = 100
     
     @property
     def total_attack(self):
@@ -536,12 +552,11 @@ class Floor:
         self.towns.insert(0, b)
         
         n = 90 + self.num * 10 + 1
-        self.routes = {}
         route = Route(self.towns[0], self.towns[-1], n)
-        self.routes[n] = route
         route.town1.linked_to[route.town2] = route
         route.town2.linked_to[route.town1] = route
         self.towns.insert(random.randint(1, len(self.towns) - 1), a)
+        self.routes = [route]
         n += 1
 
         first_town = self.towns.pop(0)
@@ -549,7 +564,7 @@ class Floor:
         print(self.towns[town_num[-1]].name)
         while len(town_num) > 1:
             route = Route(self.towns[town_num.pop()], self.towns[town_num[-1]], n)
-            self.routes[n] = route
+            self.routes.append(route)
             route.town1.linked_to[route.town2] = route
             route.town2.linked_to[route.town1] = route
             n += 1
@@ -563,7 +578,7 @@ class Floor:
                           self.towns[not_fully_connected.pop()], n)
             if route.town2 in route.town1.linked_to:
                 continue
-            self.routes[n] = route
+            self.routes.append(route)
             route.town1.linked_to[route.town2] = route
             route.town2.linked_to[route.town1] = route
             n += 1
@@ -571,33 +586,35 @@ class Floor:
         random.shuffle(self.towns)
         self.towns.insert(0, first_town)
 
-        # double_routes = list(self.routes.keys())[1:]
-        # random.shuffle(double_routes)
-        # double_routes = double_routes[-len(self.towns) // 5:]
-        # for i in range(len(double_routes)):
-        #     double_route = self.routes[double_routes[i]]
-        #     route1 = Route(double_route.town1, None, double_route.num)
-        #     route2 = Route(route1, double_route.town2, double_route.num + 1)
-        #     route1.town2 = route2
-        #     double_route.town1.linked_to[double_route.town2] = route1
-        #     double_route.town2.linked_to[double_route.town1] = route2
+        double_routes = list(range(1, len(self.routes)))
+        random.shuffle(double_routes)
+        double_routes = double_routes[-len(self.towns) // 5:]
+        for index, item in enumerate(double_routes):
+            double_route = self.routes[item]
+            route1 = Route(double_route.town1, None, double_route.num)
+            route2 = Route(route1, double_route.town2, double_route.num + 1)
+            route1.town2 = route2
+            double_route.town1.linked_to[double_route.town2] = route1
+            double_route.town2.linked_to[double_route.town1] = route2
 
-        #     self.routes[double_route.num] = route1
-        #     double_routes[i] = route2
+            self.routes[item] = route1
+            double_routes[index] = route2
         
-        # for route2 in double_routes:
-        #     if route2.num + 1 not in self.routes:
-        #         self.routes[route2.num + 1] = route2
-        #     else:
-        #         replacement = self.routes[route2.num]
-        #         self.routes[route2.num] = route2
-        #         self.routes[n] = replacement
-        #         replacement.num = n
+        for route2 in double_routes:
+            if route2.num < n:
+                for route in self.routes:
+                    if route.num >= route2.num:
+                        route.num += 1
+            self.routes.append(route2)
+            n += 1
         
-        # for town in self.towns:
-        #     print_slow(town.max_connections)
-        #     for town2, route in town.linked_to.items():
-        #         print_slow(route, "(" + route.town1.name, "to", route.town2.name + ")")
+        self.routes = {route.num: route for route in self.routes}
+        
+        for town in self.towns:
+            print_slow(town.max_connections)
+            for town2, route in town.linked_to.items():
+                print_slow(route, "(" + town.name, "to", route.get_other(town).name + ")")
+        print()
 
         import turtle
         points = [(0, 0)]
@@ -606,7 +623,7 @@ class Floor:
             c = math.cos(2 * math.pi / (len(self.towns) - 1) * i)
             points.append((-s * 200, c * 200))
         turtle.clear()
-        turtle.speed(1)
+        turtle.speed(1.5)
         turtle.penup()
         for i, point in enumerate(points):
             turtle.goto(*point[:2])
@@ -642,11 +659,16 @@ class Town:
 class Route:
     def __init__(self, town1, town2, num):
         self.town1, self.town2, self.num = town1, town2, num
-        self.name = "Route " + str(num)
+    
+    @property
+    def name(self):
+        return "Route " + str(self.num)
+    
+    def __str__(self):
+        return self.name
     
     def __repr__(self):
-        return self.name
-    __str__ = __repr__
+        return self.name + " (" + self.town1.name + " to " + self.town2.name + ")"
     
     def get_other(self, other):
         if other is self.town1:
