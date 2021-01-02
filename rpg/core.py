@@ -119,7 +119,7 @@ class Game:
             if input_slow("Do you want to overwrite the save file for the save name " +
                           name + "? (y/n) ").lower() != "y":
                 return
-        if not os.path.isdir(os.path.join(directory, "save")):
+        if not os.path.isdir(directory):
             os.mkdir(directory)
         with open(os.path.join(directory, "save_" + name + ".rpg"), "wb+") as f:
             self.play_time += datetime.datetime.now() - self.opening_time
