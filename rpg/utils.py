@@ -74,23 +74,29 @@ def strfdelta(tdelta, fmt='{D:02}d {H:02}h {M:02}m {S:02}s', inputtype='timedelt
 def mainloop(cls, prompt):
     while True:
         try:
-            command = re.subn(
-                " +", input_slow(prompt + "> ").lstrip().rstrip().lower(), " ")[0]
-            cmd_args = command.split(" ")
+            command = input_slow(prompt + "> ").lstrip().rstrip().lower()
+            cmd_args = [arg for arg in command.split(" ") if arg]
         except KeyboardInterrupt:
             print()
             break
         except EOFError:
             break
-        if not len(cmd_args[0]) or not cmd_args[0]:
+        if not len(cmd_args):
             print()
             continue
         if cmd_args[0] == "exit":
             break
         if cmd_args[0] in cls.available_commands:
-            func = getattr(cls, cmd_args[0])
-            if len(inspect.signature(func).parameters) >= len(cmd_args) - 1:
-                if not func(*cmd_args[1:]) == -1:
+            cmd = getattr(cls, cmd_args.pop(0))
+            if cmd.min_args <= len(cmd_args) <= cmd.max_args:
+                if len(cmd_args) > 1:
+                    if not hasattr(cmd, cmd_args[0]):
+                        print_slow("\"" + command + "\"", "is not a valid command!\n")
+                        continue
+                    func = getattr(cmd, cmd_args.pop(0))
+                else:
+                    func = cmd
+                if func(*cmd_args) != -1:
                     print()
                     continue
         print_slow("\"" + command + "\"", "is not a valid command!\n")

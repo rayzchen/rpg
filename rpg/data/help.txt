@@ -1,4 +1,3 @@
-This is the Menu bar, and will be indicated when you see the characters 'Menu> ' on the screen. You can type commands here. To get help with any commands, type 'help <command name>', replacing <command name> with the command you want help with.
 Typing 'help' will display this help text. To get help with any commands, type 'help <command name>', replacing <command name> with the command you want help with.
 Typing 'stats' will display your current stats. Typing 'stats' and then one of 'name', 'health', 'experience', 'attack', 'defense', or 'money' will display that exact Stat.
 Typing 'save' will save your current state to a folder named 'save'. The save name will be called 'save_<name>.rpg'. Typing 'save <name>' will save with name <name>.
