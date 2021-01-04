@@ -3,8 +3,6 @@ import sys
 import os
 import textwrap
 import string
-import inspect
-import re
 
 from .loader import CONSTS
 
