@@ -79,8 +79,7 @@ class Game_save(Command):
             print_slow("Cancelled saving.")
             return
         # save_folder = os.path.expandvars(os.path.join("%localappdata%", "RPG", "saves"))
-        directory = os.path.join(os.path.dirname(
-            os.path.abspath(__file__)), "save")
+        directory = os.path.join(CONSTS["home"], "save")
         if os.path.isfile(os.path.join(directory, "save_" + name + ".rpg")):
             if input_slow("Do you want to overwrite the save file for the save name " +
                           name + "? (y/n) ").lower() != "y":

@@ -5,7 +5,7 @@ import sys
 split = lambda x: x.split("\n")
 
 def load_stats(file):
-    with open(os.path.join(directory, "data", file + ".txt"), "r") as f:
+    with open(os.path.join(CONSTS["home"], "data", file + ".txt"), "r") as f:
         text = list(map(split, f.read().rstrip().split("\n\n")))
     data = []
     for item in text:
@@ -20,7 +20,7 @@ def load_stats(file):
     return data
 
 CONSTS = {
-    "directory": directory = os.path.dirname(os.path.abspath(__file__)),
+    "home": os.path.dirname(os.path.abspath(__file__)),
     "speed": 0.03, "multiplier": 10,
     "available_commands": [
         "help", "stats", "save", "cls", "clear", "gifts", "location", "shop", "items",
@@ -28,10 +28,9 @@ CONSTS = {
     "currency": random.choice(["Alyf", "Ryn", "Iysa"]),
     "directions": [
         "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"],
-    
-    "towns": load_stats("towns"), "items": load_stats("items"),
-    "monsters": load_stats("monsters"),
 }
+CONSTS.update({"towns": load_stats("towns"), "items": load_stats("items"),
+               "monsters": load_stats("monsters")})
 if os.name == "nt":
     CONSTS["clear"] = "cls"
 else:
@@ -48,10 +47,10 @@ if "--test" in sys.argv or "-t" in sys.argv:
 elif "--fast" in sys.argv or "-f" in sys.argv:
     CONSTS["speed"] = 0
 
-with open(os.path.join(directory, "data", "help.txt"), "r") as f:
+with open(os.path.join(CONSTS["home"], "data", "help.txt"), "r") as f:
     lines = f.read().rstrip().splitlines()
 CONSTS["help_commands"] = {cmd: line for cmd,
                            line in zip(CONSTS["available_commands"], lines)}
 
-with open(os.path.join(directory, "data", "intro.txt"), "r") as f:
+with open(os.path.join(CONSTS["home"], "data", "intro.txt"), "r") as f:
     CONSTS["intro"] = f.read().rstrip().splitlines()

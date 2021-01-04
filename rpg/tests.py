@@ -1,8 +1,9 @@
 import os
 import shutil
 import sys
-if os.path.isdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "save")):
-    shutil.rmtree(os.path.join(os.path.dirname(os.path.abspath(__file__)), "save"))
+from .loader import CONSTS
+if os.path.isdir(os.path.join(CONSTS["home"], "save")):
+    shutil.rmtree(os.path.join(CONSTS["home"], "save"))
 
 _n = 0
 _items = [
