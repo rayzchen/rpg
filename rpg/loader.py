@@ -42,8 +42,8 @@ CONSTS["towns"].insert(0, starting_town)
 
 if "--test" in sys.argv or "-t" in sys.argv:
     CONSTS["speed"] = 0
-    from . import tests
-    input = tests.get_input  # Comment out if not testing
+    from .tests import get_input
+    input = get_input  # Comment out if not testing
 elif "--fast" in sys.argv or "-f" in sys.argv:
     CONSTS["speed"] = 0
 
