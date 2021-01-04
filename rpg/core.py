@@ -144,7 +144,6 @@ class Shop:
     }
 
     def __init__(self, items):
-        items = items[1:]
         self.selling = []
         for item_num in items:
             item = Item.from_dict(CONSTS["items"][item_num])
@@ -281,7 +280,7 @@ class Town:
         self.max_connections = 2
         self.name, self.desc = info["name"], info["desc"]
         self.spawn_rate = spawn_rate
-        self.shop = Shop(list(map(int, info["shop_info"].split(", "))))
+        self.shop = Shop(list(map(int, info["shop_info"][1:-1].split(", "))))
 
     def print_description(self):
         print_slow(self.desc)

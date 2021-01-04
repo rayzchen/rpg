@@ -1,10 +1,28 @@
-{'started': True, 'opening_time': datetime.datetime(2021, 1, 1, 22, 49, 46, 710867), 'player': <rpg.core.Player object at 0x00E35B08>, 'time_offset': datetime.timedelta(0), 'play_time': datetime.timedelta(seconds=21, microseconds=893638), 'start_time': datetime.datetime(2021, 1, 1, 22, 49, 47, 753353), 'starting_town': {'name': 'Starting Town', 'desc': ['This is a small town with a few NPCs walking around. In the north, a busy shopping market bustles around. A few inns litter the central square. In the south, a large forest sweeps across the land.']}, 'town_names': ['Ryvathemar', 'Thylelthemar', 'Saalian', 'Lylse Elunore', 'Nelva Anore'], 'town_descs': OOF, 'floors': [<rpg.core.Floor object at 0x00E44160>]}
+{'started': True, 'opening_time': datetime.datetime(2021, 1, 4, 20, 15, 1, 728166), 'player': <rpg.core.Player object at 0x03952CD0>, 'time_offset': datetime.timedelta(0), 'play_time': datetime.timedelta(seconds=2, microseconds=87591), 'start_time': datetime.datetime(2021, 1, 4, 20, 15, 0, 672255), 
+'floors': [<rpg.core.Floor object at 0x03987BC8>]}
+
+Save opening_time, player, time_offset, play_time, start_time, floors
 
 player
-{'name': 'Ray', 'health': 50, 'max_health': 50, 'attack': 5, 'defense': 2, 'experience': 0 (Level 0 + 0), 'money': 55, 'gifts': [], 'items': [Wooden Sword +0, Wooden Shield +0], 'town': <rpg.core.Town object at 0x00E35BC8>, 'floor': <rpg.core.Floor object at 0x00E44160>, 'equipment': <rpg.values.Equipment object at 0x00E441F0>, 'thirst': 50, 'hunger': 50}
+{'name': 'Ray', 'health': 50, 'max_health': 50, 'attack': 5, 'defense': 2, 'experience': 0 (Level 0 + 0), 'money': 55, 'gifts': [], 'items': [Wooden Sword +0, Wooden Shield +0], 'town': <rpg.core.Town object at 0x03987298>, 'floor': <rpg.core.Floor object at 0x03987BC8>, 'equipment': <rpg.values.Equipment object at 0x03987BF8>, 'thirst': 50, 'hunger': 50, 'furthest_route': 100}
+
+Save name, health, max_health, experience, money, gifts, items, town index, floor num, equipment, thirst, hunger and furthest_route
 
 equipment
 {'sword': Wooden Sword +0, 'shield': Wooden Shield +0, 'cloak': None, 'helmet': None, 'shoes': None}
 
+Save items (index, level (and stats?))
+
 floor 1
-{'num': 1, 'prev_floor': None, 'next_floor': None, 'towns': [<rpg.core.Town object at 0x00E35C10>, <rpg.core.Town object at 0x00E35BE0>, <rpg.core.Town object at 0x00E35D00>, <rpg.core.Town object at 0x00E35BC8>, <rpg.core.Town object at 0x00E35BF8>], 'routes': OOF}
+{'num': 1, 'prev_floor': None, 'next_floor': None, 'towns': [<rpg.core.Town object at 0x03987298>, <rpg.core.Town object at 0x03987268>, <rpg.core.Town object at 0x03987358>, <rpg.core.Town object at 0x039872B0>, <rpg.core.Town object at 0x03987328>], 'routes': {101: Route 101 (Starting Town to Ryvathemar), 102: Route 102 (Ryvathemar to Raslin), 103: Route 103 (Raslin to Mea Lenora), 104: Route 104 (Mea Lenora to Route 105), 105: Route 105 (Route 104 to Thylelthemar)}}
+
+Save number, towns, routes (while editing town.linked_to)
+
+town 1
+{'linked_to': {<rpg.core.Town object at 0x039872B0>: Route 101 (Starting Town to Ryvathemar)}, 'max_connections': 1, 'name': 'Starting Town', 'desc': 
+'This is a small town with a few NPCs walking around. In the north, a busy shopping market bustles around. A few inns litter the central square. In the south, a large forest sweeps across the land.', 'spawn_rate': 0.869606283437064, 'shop': <rpg.core.Shop object at 0x039879A0>}
+
+Save town info index (e.g 0), and spawn rate and shop
+
+shop 1
+List sold item indexes (e.g [0, 1, 2]) with sold and number
