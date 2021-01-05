@@ -86,11 +86,14 @@ class Game_save(Command):
                 return
         if not os.path.isdir(directory):
             os.mkdir(directory)
-        with open(os.path.join(directory, "save_" + name + ".rpg"), "wb+") as f:
-            self.play_time += datetime.datetime.now() - self.opening_time
-            pickle.dump(self, f)
-            print_slow("Saved successfully!")
-            self.opening_time = datetime.datetime.now()
+        self.play_time += datetime.datetime.now() - self.opening_time
+        from ..save import Pickler
+        p = Pickler()
+        # with open(os.path.join(directory, "save_" + name + ".rpg"), "wb+") as f:
+            # pickle.dump(self, f)
+        p.save_game(self, os.path.join(directory, "save_" + name + ".rpg"))
+        print_slow("Saved successfully!")
+        self.opening_time = datetime.datetime.now()
 
 class Game_gifts(Command):
     def __init__(self, owner):
@@ -324,7 +327,7 @@ class Game_travel(Command):
                 print()
         print()
 
-        towns = list(self.player.town.linked_to.keys())
+        towns = list(self.player.town.linked_to)
         routes = list(self.player.town.linked_to.values())
         route_numbers = list(map(lambda x: str(x.num), routes))
         if len(towns) == 1:

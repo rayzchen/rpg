@@ -21,7 +21,7 @@ class Experience:
     def sub(self, amount):
         self.exp -= amount
         self.total_exp -= amount
-        if self.exp < 0:
+        while self.exp < 0:
             self.level -= 1
             self.exp += self.level * 5 + 20
 
@@ -46,13 +46,29 @@ class Equipment:
         return iter(getattr(self, item) for item in self.equippable)
 
 class Gift:
-    def __init__(self, from_who, item_name, item, amount, args=[]):
+    def __init__(self, from_who, item):
         self.from_who = from_who
-        self.item_name = item_name
         self.item = item
-        self.amount = amount
-        self.args = args
         self.player = None
+
+    def give(self, player):
+        print_slow("\nReceived", self.item.name, "from", self.from_who + "\n")
+        player.gifts.append(self)
+        self.player = player
+
+    def claim(self):
+        if self.player is not None:
+            self.player.items.append(self.item)
+            self.player.gifts.remove(self)
+            print_slow("Claimed", self.item_name, "from", self.from_who)
+        else:
+            raise Exception("Cannot claim gift before giving it to someone")
+
+class Money(Gift):
+    def __init__(self, from_who, amount):
+        super(Money, self).__init__(from_who, None)
+        self.item_name = format(amount, ",") + " " + CONSTS["currency"] + "s"
+        self.amount = amount
 
     def give(self, player):
         print_slow("\nReceived", self.item_name, "from", self.from_who + "\n")
@@ -61,8 +77,7 @@ class Gift:
 
     def claim(self):
         if self.player is not None:
-            self.player.items.extend([self.item(*self.args)
-                                      for i in range(self.amount)])
+            self.player.money += self.amount
             self.player.gifts.remove(self)
             print_slow("Claimed", self.item_name, "from", self.from_who)
         else:
@@ -87,16 +102,3 @@ class Item:
     
     def copy(self):
         return Item(self.name, self.stats.copy())
-
-class Money(Gift):
-    def __init__(self, from_who, amount):
-        super(Money, self).__init__(from_who, format(
-            amount, ",") + " " + CONSTS["currency"] + "s", None, amount)
-
-    def claim(self):
-        if self.player is not None:
-            self.player.money += self.amount
-            self.player.gifts.remove(self)
-            print_slow("Claimed", self.item_name, "from", self.from_who)
-        else:
-            raise Exception("Cannot claim gift before giving it to someone")

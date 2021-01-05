@@ -145,7 +145,8 @@ class Shop:
 
     def __init__(self, items):
         self.selling = []
-        for item_num in items:
+        self.item_indexes = items
+        for item_num in self.item_indexes:
             item = Item.from_dict(CONSTS["items"][item_num])
             price = CONSTS["items"][item_num]["price"]
             self.selling.append([item, price, False])
@@ -163,10 +164,14 @@ class Shop:
         self.player = None
 
 class Floor:
-    def __init__(self, num, town_info, prev_floor=None, next_floor=None):
+    def __init__(self, num, town_info, prev_floor=None, next_floor=None, pickle=False):
         self.num = num
         self.prev_floor = prev_floor
         self.next_floor = next_floor
+        self.routes = {}
+        if pickle:
+            return
+
         self.towns = [Town(info,
             random.uniform(0.9 - 0.05 * self.num, 0.95 - 0.05 * self.num)
         ) for info in town_info]
@@ -278,12 +283,28 @@ class Town:
     def __init__(self, info, spawn_rate):
         self.linked_to = {}
         self.max_connections = 2
-        self.name, self.desc = info["name"], info["desc"]
+        self.info = info
         self.spawn_rate = spawn_rate
         self.shop = Shop(list(map(int, info["shop_info"][1:-1].split(", "))))
 
     def print_description(self):
         print_slow(self.desc)
+    
+    @property
+    def name(self):
+        return self.info["name"]
+    
+    @name.setter
+    def name(self, val):
+        self.info["name"] = val
+    
+    @property
+    def desc(self):
+        return self.info["desc"]
+    
+    @desc.setter
+    def desc(self, val):
+        self.info["desc"] = val
 
 class Route:
     def __init__(self, town1, town2, num):
